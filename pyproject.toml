@@ -1,0 +1,9 @@
+[project]
+name = "swarmshield"
+version = "1.0.0"
+description = "Scarcity-aware interceptor allocation simulator for SDTH 2026"
+requires-python = ">=3.10"
+
+[tool.unittest]
+start-directory = "tests"
+

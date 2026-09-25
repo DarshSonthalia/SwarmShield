@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SwarmShield | Scarcity-aware allocation</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main>
+    <header class="topbar">
+      <div class="brand"><span class="mark">S</span><div><h1>SWARMSHIELD</h1><p>SCARCITY-AWARE SWARM ALLOCATION</p></div></div>
+      <div class="status"><span class="pulse"></span><span id="systemStatus">SIMULATION READY</span></div>
+    </header>
+
+    <section class="hero-grid">
+      <article class="map-card">
+        <div class="card-heading">
+          <div><p class="eyebrow">LIVE ENGAGEMENT</p><h2 id="scenarioTitle">Scenario engine</h2></div>
+          <div class="strategy-toggle" role="group" aria-label="Strategy">
+            <button data-strategy="baseline">Naive baseline</button>
+            <button class="active" data-strategy="swarmshield">SwarmShield</button>
+          </div>
+        </div>
+        <form class="scenario-builder" id="scenarioForm">
+          <label>Threats<input id="threatCount" type="number" min="1" max="200" value="20"></label>
+          <label>Interceptors<input id="interceptorCount" type="number" min="0" max="120" value="12"></label>
+          <label>Seed<input id="seedValue" type="number" min="0" max="1000000" value="42"></label>
+          <label>Duration (s)<input id="durationValue" type="number" min="30" max="600" value="190"></label>
+          <label class="event-check"><input id="eventsEnabled" type="checkbox" checked> Dynamic events</label>
+          <button class="secondary" id="generateButton" type="submit">Generate scenario</button>
+        </form>
+        <details class="custom-scenario" id="customScenario">
+          <summary>Advanced: edit a complete scenario</summary>
+          <p>Adjust assets, positions, velocities, confidence, interceptor capabilities, and events in JSON. The current scenario is a starting template.</p>
+          <textarea id="customJson" spellcheck="false" aria-label="Custom scenario JSON"></textarea>
+          <div class="custom-actions"><button class="secondary" id="loadTemplate" type="button">Reset to current scenario</button><button class="secondary" id="runCustom" type="button">Run custom scenario</button></div>
+        </details>
+        <div class="canvas-wrap">
+          <canvas id="tacticalMap" width="1200" height="720" aria-label="Tactical engagement map"></canvas>
+          <div class="legend"><span><i class="dot threat"></i>Threat</span><span><i class="dot interceptor"></i>Interceptor</span><span><i class="dot unallocated"></i>Explicit leakage</span></div>
+          <div class="event-banner" id="eventBanner">SCENARIO GENERATED</div>
+        </div>
+        <div class="playback">
+          <button id="playButton" class="primary">▶ Run engagement</button>
+          <div class="timeline"><input id="timeSlider" type="range" min="0" max="190" value="0" step="1"><div><span id="timeLabel">T+000 s</span><span id="compressionLabel">SIM / 6.3× DEMO COMPRESSION</span></div></div>
+        </div>
+      </article>
+
+      <aside class="side-stack">
+        <article class="panel summary-panel">
+          <p class="eyebrow">MISSION EFFECT</p>
+          <div class="big-metric"><span id="reductionMetric">--</span><small>%</small><p id="reductionLabel">change in expected consequence of leakage</p></div>
+          <div class="mini-grid">
+            <div><span id="criticalMetric">--</span><p>critical leaks</p></div>
+            <div><span id="leakageMetric">--</span><p>total leakage</p></div>
+            <div><span id="costMetric">--</span><p>resource cost</p></div>
+            <div><span id="reassignMetric">--</span><p>retasks</p></div>
+          </div>
+        </article>
+
+        <article class="panel network-panel">
+          <div class="panel-title"><p class="eyebrow">COORDINATION</p><span id="networkMode" class="badge">GROUND LINK</span></div>
+          <div class="network-visual" id="networkPeers"></div>
+          <p id="networkDetail">Central cue available. Decisions remain locally executable.</p>
+        </article>
+
+        <article class="panel decision-panel">
+          <p class="eyebrow">DECISION AUDIT</p>
+          <div id="decisionList" class="decision-list"></div>
+        </article>
+      </aside>
+    </section>
+
+    <section class="comparison panel">
+      <div><p class="eyebrow" id="sameRaidLabel">SAME RAID. SAME RESOURCES.</p><h2>Compare outcomes across the same raid.</h2></div>
+      <div class="comparison-table" id="comparisonTable"></div>
+    </section>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

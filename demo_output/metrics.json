@@ -1,0 +1,46 @@
+{
+  "headline": {
+    "expected_consequence_reduction_percent": 55.3,
+    "critical_leaks_avoided": 4
+  },
+  "baseline": {
+    "strategy": "baseline",
+    "threats": 20,
+    "interceptors": 12,
+    "intercepted": 11,
+    "leakage": 9,
+    "actual_leakage": 9,
+    "projected_leakage": 0,
+    "off_course_unresolved": 0,
+    "leakage_percent": 45.0,
+    "critical_leaks": 5,
+    "expected_consequence_leaked": 480.58,
+    "interceptors_launched": 12,
+    "defensive_cost": 20.0,
+    "reassignments": 0,
+    "reassignment_latency_s": null,
+    "collision_avoidance_actions": 0,
+    "ground_link_loss_exercised": true,
+    "peer_coordination_active": false
+  },
+  "swarmshield": {
+    "strategy": "swarmshield",
+    "threats": 20,
+    "interceptors": 12,
+    "intercepted": 11,
+    "leakage": 9,
+    "actual_leakage": 9,
+    "projected_leakage": 0,
+    "off_course_unresolved": 0,
+    "leakage_percent": 45.0,
+    "critical_leaks": 1,
+    "expected_consequence_leaked": 214.58,
+    "interceptors_launched": 12,
+    "defensive_cost": 20.0,
+    "reassignments": 1,
+    "reassignment_latency_s": 0.0,
+    "collision_avoidance_actions": 8,
+    "ground_link_loss_exercised": true,
+    "peer_coordination_active": true
+  }
+}
