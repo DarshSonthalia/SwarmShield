@@ -11,3 +11,4 @@ venv/
 .DS_Store
 Thumbs.db
 demo_output/engagement.json
+.worktrees/
