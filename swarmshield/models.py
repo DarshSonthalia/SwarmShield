@@ -57,6 +57,46 @@ class Threat:
         return data
 
 
+@dataclass(frozen=True)
+class TrackObservation:
+    time_s: float
+    position: Vec2
+    velocity: Vec2
+
+
+@dataclass(frozen=True)
+class ObservedThreat:
+    id: str
+    time_s: float
+    position: Vec2
+    velocity: Vec2
+    p_hostile: float
+    state: str
+    altitude_m: float
+
+    def speed(self) -> float:
+        return hypot(self.velocity.x, self.velocity.y)
+
+
+@dataclass(frozen=True)
+class ThreatBelief:
+    threat_id: str
+    time_s: float
+    destination_probabilities: dict[str, float]
+    approach_times_s: dict[str, float | None]
+    top_destination_id: str
+    top_probability: float
+    expected_consequence: float
+    uncertainty: float
+    uncertainty_label: str
+    urgency: float
+    feasible_horizon_s: float
+    risk: float
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
 @dataclass
 class Interceptor:
     id: str
