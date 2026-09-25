@@ -1,7 +1,9 @@
 import json
+import inspect
 import unittest
 
 from swarmshield.scenario import build_hackathon_scenario
+from swarmshield import simulator
 from swarmshield.simulator import run_comparison, run_scenario
 
 
@@ -45,6 +47,39 @@ class SimulatorTests(unittest.TestCase):
     def test_collision_avoidance_is_exercised(self):
         metrics = self.result["runs"]["swarmshield"]["metrics"]
         self.assertGreater(metrics["collision_avoidance_actions"], 0)
+
+    def test_operational_snapshots_expose_belief_not_truth(self):
+        rows = [row for row in self.result["runs"]["swarmshield"]["trajectories"]
+                if row["kind"] == "threat"]
+        self.assertTrue(all("asset_id" not in row for row in rows))
+        self.assertTrue(all("belief" in row and "decision" in row for row in rows))
+
+    def test_prediction_metrics_use_first_commit(self):
+        evaluation = self.result["runs"]["swarmshield"]["metrics"]["prediction_evaluation"]
+        self.assertEqual(evaluation["committed_count"] + evaluation["uncommitted_count"], 20)
+        if evaluation["committed_count"]:
+            self.assertGreaterEqual(evaluation["top_destination_accuracy"], 0)
+            self.assertLessEqual(evaluation["brier_score"], 2)
+
+    def test_decision_events_are_sparse_and_evidenced(self):
+        events = self.result["runs"]["swarmshield"]["events"]
+        decisions = [event for event in events if event["type"] in {"hold", "commit", "retask"}]
+        keys = [(event["time_s"], event["type"], event["threat_id"]) for event in decisions]
+        self.assertEqual(len(keys), len(set(keys)))
+        self.assertTrue(all("evidence" in event for event in decisions))
+
+    def test_decision_helpers_do_not_read_destination_truth(self):
+        source = inspect.getsource(simulator._update_beliefs) + inspect.getsource(simulator._swarm_assign)
+        self.assertNotIn("asset_id", source)
+
+    def test_t05_demonstrates_hold_commit_and_failure_recovery(self):
+        events = self.result["runs"]["swarmshield"]["events"]
+        t05 = [event for event in events if event.get("threat_id") == "T05"]
+        sequence = [event["type"] for event in t05]
+        self.assertIn("hold", sequence)
+        self.assertIn("commit", sequence)
+        self.assertTrue(any(kind in sequence for kind in ("retask", "failure_recovery")))
+        self.assertLess(sequence.index("hold"), sequence.index("commit"))
 
 
 if __name__ == "__main__":

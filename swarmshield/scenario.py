@@ -141,7 +141,24 @@ def build_scenario(
 
 def build_hackathon_scenario(seed: int = 42) -> Scenario:
     """Return the reproducible default judging scenario."""
-    return build_scenario(20, 12, seed=seed, duration_s=190, enable_events=True)
+    scenario = build_scenario(20, 12, seed=seed, duration_s=190, enable_events=True)
+    t05 = next(threat for threat in scenario.threats if threat.id == "T05")
+    # The initial southbound track lies between A01 and A05. Its later turn is
+    # ordinary observed geometry, allowing the belief model to move HOLD to COMMIT.
+    t05.position = Vec2(2300.0, 13600.0)
+    t05.velocity = Vec2(0.0, -146.0)
+    scenario.commitment_distance_m = 700.0
+    scenario.events = [event for event in scenario.events
+                       if event["type"] not in {"threat_diversion", "interceptor_failure"}]
+    scenario.events.extend([
+        {"time_s": 32, "type": "threat_diversion", "threat_id": "T05",
+         "new_asset_id": "A01", "new_confidence": .94,
+         "label": "T05 changes course toward Command Centre"},
+        {"time_s": 33, "type": "interceptor_failure", "interceptor_id": "I09",
+         "label": "I09 fails after T05 commitment"},
+    ])
+    scenario.events.sort(key=lambda event: event["time_s"])
+    return scenario
 
 
 def clone_scenario(scenario: Scenario) -> Scenario:

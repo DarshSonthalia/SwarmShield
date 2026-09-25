@@ -3,7 +3,8 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-from .models import Asset, Interceptor, Threat, Vec2
+from .belief import uncertainty_friction
+from .models import Interceptor, ObservedThreat, ThreatBelief, Vec2
 
 
 @dataclass(frozen=True)
@@ -18,31 +19,7 @@ class PairScore:
     energy_cost: float
 
 
-def time_to_asset(threat: Threat, asset: Asset) -> float:
-    dx = asset.position.x - threat.position.x
-    dy = asset.position.y - threat.position.y
-    vx, vy = threat.velocity.x, threat.velocity.y
-    speed_squared = vx * vx + vy * vy
-    if speed_squared <= 0:
-        return float("inf")
-    time = (dx * vx + dy * vy) / speed_squared
-    if time < 0:
-        return float("inf")
-    miss_distance = math.hypot(dx - vx * time, dy - vy * time)
-    if miss_distance > 300.0:
-        return float("inf")
-    return time
-
-
-def threat_risk(threat: Threat, asset: Asset) -> float:
-    tti = time_to_asset(threat, asset)
-    if not math.isfinite(tti):
-        return 0.0
-    urgency = min(1.0, 95.0 / max(tti, 1.0))
-    return threat.p_hostile * asset.consequence * (0.45 + 0.55 * urgency)
-
-
-def intercept_solution(interceptor: Interceptor, threat: Threat) -> tuple[float, Vec2] | None:
+def intercept_solution(interceptor: Interceptor, threat: ObservedThreat) -> tuple[float, Vec2] | None:
     """Solve |target + velocity*t - interceptor| = interceptor_speed*t."""
     rx = threat.position.x - interceptor.position.x
     ry = threat.position.y - interceptor.position.y
@@ -69,7 +46,7 @@ def intercept_solution(interceptor: Interceptor, threat: Threat) -> tuple[float,
     return t, point
 
 
-def score_pair(interceptor: Interceptor, threat: Threat, asset: Asset) -> PairScore:
+def score_pair(interceptor: Interceptor, threat: ObservedThreat, belief: ThreatBelief) -> PairScore:
     # Layer 3 assumes a same-direction pursuit, not a head-on meeting.
     relative_x = interceptor.position.x - threat.position.x
     relative_y = interceptor.position.y - threat.position.y
@@ -81,21 +58,22 @@ def score_pair(interceptor: Interceptor, threat: Threat, asset: Asset) -> PairSc
     intercept_time, point = solution
     distance = interceptor.position.distance_to(point)
     effective_range = interceptor.range_m * max(0.35, interceptor.battery)
-    before_impact = intercept_time < time_to_asset(threat, asset) - 2.0
+    before_impact = intercept_time < belief.feasible_horizon_s - 2.0
     feasible = distance <= effective_range and before_impact and interceptor.state not in {"failed", "spent"}
     if not feasible:
         return PairScore(interceptor.id, threat.id, False, -1e9, intercept_time, point, 0.0, distance)
 
     speed_margin = max(0.0, interceptor.max_speed_mps - threat.speed())
     probability = min(0.97, 0.58 + speed_margin / 260.0 + 0.12 * interceptor.battery)
-    risk = threat_risk(threat, asset)
+    risk = belief.risk
     time_penalty = min(3.0, intercept_time * 0.012)
     resource_penalty = interceptor.cost * 0.35
     energy_penalty = 0.65 * distance / max(effective_range, 1.0)
     # A modest switching cost prevents assignments from oscillating every
     # auction round while leaving a newly critical track able to win a rebid.
     continuity_bonus = 0.65 * risk if interceptor.target_id == threat.id else 0.0
-    utility = risk * probability - time_penalty - resource_penalty - energy_penalty + continuity_bonus
+    utility = (risk * probability - time_penalty - resource_penalty - energy_penalty
+               - uncertainty_friction(belief) + continuity_bonus)
     return PairScore(
         interceptor.id,
         threat.id,
@@ -164,8 +142,8 @@ def _hungarian(cost: list[list[float]]) -> list[int]:
 
 def allocate_swarmshield(
     interceptors: list[Interceptor],
-    threats: list[Threat],
-    assets: dict[str, Asset],
+    threats: list[ObservedThreat],
+    beliefs: dict[str, ThreatBelief],
 ) -> tuple[dict[str, str], dict[tuple[str, str], PairScore]]:
     available = [i for i in interceptors if i.state not in {"failed", "spent"} and not i.committed]
     active = [t for t in threats if t.state == "active"]
@@ -176,7 +154,7 @@ def allocate_swarmshield(
     for interceptor in available:
         utilities = []
         for threat in active:
-            score = score_pair(interceptor, threat, assets[threat.asset_id])
+            score = score_pair(interceptor, threat, beliefs[threat.id])
             scores[(interceptor.id, threat.id)] = score
             utilities.append(score.utility if score.feasible else -1e6)
         # One zero-utility dummy per interceptor makes non-engagement explicit.
@@ -193,7 +171,7 @@ def allocate_swarmshield(
 
 
 def allocate_baseline(
-    interceptors: list[Interceptor], threats: list[Threat], assets: dict[str, Asset]
+    interceptors: list[Interceptor], threats: list[ObservedThreat], beliefs: dict[str, ThreatBelief]
 ) -> dict[str, str]:
     """Naive one-round-per-target baseline: nearest feasible pair first."""
     pairs: list[tuple[float, str, str]] = []
@@ -203,7 +181,7 @@ def allocate_baseline(
         for threat in threats:
             if threat.state != "active":
                 continue
-            score = score_pair(interceptor, threat, assets[threat.asset_id])
+            score = score_pair(interceptor, threat, beliefs[threat.id])
             if score.feasible:
                 pairs.append((interceptor.position.distance_to(threat.position), interceptor.id, threat.id))
     assignments: dict[str, str] = {}

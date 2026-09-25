@@ -1,42 +1,50 @@
+import inspect
 import unittest
 
-from swarmshield.allocator import allocate_swarmshield, intercept_solution, threat_risk
-from swarmshield.models import Asset, Interceptor, Threat, Vec2
-from swarmshield.scenario import build_hackathon_scenario
+import swarmshield.allocator
+from swarmshield.allocator import allocate_baseline, allocate_swarmshield, intercept_solution, score_pair
+from swarmshield.models import Interceptor, ObservedThreat, ThreatBelief, Vec2
+
+
+def observed():
+    return ObservedThreat("T", 0, Vec2(0, 0), Vec2(0, -100), .9, "active", 400)
+
+
+def interceptor():
+    return Interceptor("I", Vec2(0, 1000), 200, 10000, 1, 1, "light", 500)
+
+
+def belief(**changes):
+    values = dict(threat_id="T", time_s=0, destination_probabilities={"A": 1},
+                  approach_times_s={"A": 30}, top_destination_id="A", top_probability=1,
+                  expected_consequence=80, uncertainty=0, uncertainty_label="low",
+                  urgency=.8, feasible_horizon_s=30, risk=57.6)
+    values.update(changes)
+    return ThreatBelief(**values)
 
 
 class AllocatorTests(unittest.TestCase):
     def test_run_down_intercept_is_feasible(self):
-        interceptor = Interceptor("I", Vec2(0, 1000), 200, 10000, 1, 1, "light", 500)
-        threat = Threat("T", Vec2(0, 0), Vec2(0, -100), .9, "A", 400)
-        solution = intercept_solution(interceptor, threat)
+        solution = intercept_solution(interceptor(), observed())
         self.assertIsNotNone(solution)
         self.assertAlmostEqual(solution[0], 10, places=4)
 
-    def test_risk_rewards_consequence(self):
-        threat = Threat("T", Vec2(0, 1000), Vec2(0, -100), .9, "A", 400)
-        low = Asset("A", "low", Vec2(0, 0), 10, "low")
-        high = Asset("A", "high", Vec2(0, 0), 100, "critical")
-        self.assertGreater(threat_risk(threat, high), threat_risk(threat, low) * 9)
+    def test_pair_feasibility_uses_belief_horizon(self):
+        score = score_pair(interceptor(), observed(), belief(feasible_horizon_s=25))
+        self.assertTrue(score.feasible)
+        self.assertLess(score.intercept_time_s, 25)
 
-    def test_off_course_track_has_zero_asset_risk(self):
-        asset = Asset("A", "asset", Vec2(0, 0), 100, "critical")
-        away = Threat("T", Vec2(0, 1000), Vec2(0, 100), .9, "A", 400)
-        self.assertEqual(threat_risk(away, asset), 0)
+    def test_uncertainty_can_hold_early_but_not_when_urgent(self):
+        early = belief(risk=10, uncertainty=1, urgency=.05)
+        urgent = belief(risk=80, uncertainty=1, urgency=.95)
+        self.assertEqual(allocate_swarmshield([interceptor()], [observed()], {"T": early})[0], {})
+        self.assertEqual(allocate_swarmshield([interceptor()], [observed()], {"T": urgent})[0], {"I": "T"})
 
-    def test_explicit_leakage_when_threats_exceed_rounds(self):
-        scenario = build_hackathon_scenario()
-        assignments, _ = allocate_swarmshield(scenario.interceptors, scenario.threats, scenario.asset_map())
-        self.assertLessEqual(len(assignments), 12)
-        self.assertGreaterEqual(20 - len(set(assignments.values())), 8)
+    def test_baseline_uses_same_observation_and_horizon(self):
+        self.assertEqual(allocate_baseline([interceptor()], [observed()], {"T": belief()}), {"I": "T"})
 
-    def test_high_risk_track_receives_round(self):
-        scenario = build_hackathon_scenario()
-        assignments, _ = allocate_swarmshield(scenario.interceptors, scenario.threats, scenario.asset_map())
-        selected = set(assignments.values())
-        risks = {t.id: threat_risk(t, scenario.asset_map()[t.asset_id]) for t in scenario.threats}
-        highest = max(risks, key=risks.get)
-        self.assertIn(highest, selected)
+    def test_allocator_source_has_no_asset_id_read(self):
+        self.assertNotIn(".asset_id", inspect.getsource(swarmshield.allocator))
 
 
 if __name__ == "__main__":

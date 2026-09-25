@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import math
-from collections import defaultdict
+from collections import defaultdict, deque
+from statistics import mean
 from typing import Any
 
-from .allocator import allocate_baseline, allocate_swarmshield, threat_risk, time_to_asset
-from .models import Interceptor, Scenario, Threat, Vec2
+from .allocator import allocate_baseline, allocate_swarmshield
+from .belief import HISTORY_LIMIT, build_threat_belief
+from .models import (Interceptor, ObservedThreat, Scenario, Threat, ThreatBelief,
+                     TrackObservation, Vec2)
 from .scenario import clone_scenario, scenario_to_dict
 
 
@@ -19,7 +22,35 @@ def _move_toward(position: Vec2, destination: Vec2, distance: float) -> tuple[Ve
     return Vec2(position.x + dx / remaining * distance, position.y + dy / remaining * distance), distance
 
 
-def _snapshot(time_s: float, threats: list[Threat], interceptors: list[Interceptor]) -> list[dict[str, Any]]:
+def _observe(threat: Threat, time_s: float) -> ObservedThreat:
+    return ObservedThreat(threat.id, time_s, threat.position, threat.velocity,
+                          threat.p_hostile, threat.state, threat.altitude_m)
+
+
+def _update_beliefs(time_s, threats, assets, histories):
+    observed = {threat.id: _observe(threat, time_s) for threat in threats}
+    for item in observed.values():
+        histories[item.id].append(TrackObservation(time_s, item.position, item.velocity))
+    beliefs = {item.id: build_threat_belief(item, list(histories[item.id]), assets)
+               for item in observed.values()}
+    return observed, beliefs
+
+
+def _belief_evidence(belief: ThreatBelief) -> dict[str, Any]:
+    return {
+        "destination_probabilities": {key: round(value, 4) for key, value in belief.destination_probabilities.items()},
+        "top_destination_id": belief.top_destination_id,
+        "top_probability": round(belief.top_probability, 4),
+        "expected_consequence": round(belief.expected_consequence, 3),
+        "uncertainty": round(belief.uncertainty, 4),
+        "uncertainty_label": belief.uncertainty_label,
+        "urgency": round(belief.urgency, 4),
+        "risk": round(belief.risk, 3),
+    }
+
+
+def _snapshot(time_s: float, threats: list[Threat], interceptors: list[Interceptor],
+              beliefs: dict[str, ThreatBelief], decisions: dict[str, str]) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     for threat in threats:
         records.append(
@@ -32,8 +63,9 @@ def _snapshot(time_s: float, threats: list[Threat], interceptors: list[Intercept
                 "z": round(threat.altitude_m, 2),
                 "state": threat.state,
                 "assignment": threat.assigned_interceptor,
-                "risk": round(threat.predicted_risk, 3),
-                "asset_id": threat.asset_id,
+                "risk": round(beliefs[threat.id].risk, 3),
+                "belief": _belief_evidence(beliefs[threat.id]),
+                "decision": decisions.get(threat.id, "HOLD"),
             }
         )
     for interceptor in interceptors:
@@ -135,16 +167,17 @@ def _apply_assignments(
 def _swarm_assign(
     scenario: Scenario,
     ground_link: bool,
+    observed: dict[str, ObservedThreat],
+    beliefs: dict[str, ThreatBelief],
 ) -> tuple[dict[str, str], dict[str, Any]]:
-    assets = scenario.asset_map()
     free = [item for item in scenario.interceptors if not item.committed]
     locked_targets = {
         item.target_id for item in scenario.interceptors
         if item.committed and item.state == "engaging" and item.target_id
     }
-    active = [item for item in scenario.threats if item.state == "active" and item.id not in locked_targets]
+    active = [observed[item.id] for item in scenario.threats if item.state == "active" and item.id not in locked_targets]
     if ground_link:
-        assignments, _ = allocate_swarmshield(free, active, assets)
+        assignments, _ = allocate_swarmshield(free, active, beliefs)
         return assignments, {"mode": "central-seeded", "components": [sorted(i.id for i in free)]}
 
     # Under ground-link loss, each connected peer component runs the same local
@@ -157,7 +190,7 @@ def _swarm_assign(
     for component in sorted(components, key=lambda ids: (-len(ids), ids)):
         local_interceptors = [by_id[item_id] for item_id in component]
         visible = [threat for threat in active if threat.id not in claimed]
-        local, _ = allocate_swarmshield(local_interceptors, visible, assets)
+        local, _ = allocate_swarmshield(local_interceptors, visible, beliefs)
         merged.update(local)
         claimed.update(local.values())
     return merged, {"mode": "peer-to-peer", "components": components}
@@ -238,15 +271,47 @@ def _collision_avoidance(
     return len(yielding_ids)
 
 
+def _ground_truth_time_to_asset(threat: Threat, asset) -> float:
+    dx, dy = asset.position.x - threat.position.x, asset.position.y - threat.position.y
+    speed_squared = threat.velocity.x ** 2 + threat.velocity.y ** 2
+    if speed_squared <= 0:
+        return float("inf")
+    time = (dx * threat.velocity.x + dy * threat.velocity.y) / speed_squared
+    if time < 0:
+        return float("inf")
+    miss = math.hypot(dx - threat.velocity.x * time, dy - threat.velocity.y * time)
+    return time if miss <= 300 else float("inf")
+
+
+def _prediction_evaluation(commit_records, threats, asset_ids):
+    committed = list(commit_records.values())
+    if not committed:
+        return {"evaluation_point": "first_commit", "committed_count": 0,
+                "uncommitted_count": len(threats), "top_destination_accuracy": None,
+                "mean_normalized_entropy": None, "brier_score": None}
+    accuracy = mean(record.top_destination_id == asset_ids[tid]
+                    for tid, record in commit_records.items())
+    brier = mean(sum((record.destination_probabilities[aid] - (aid == asset_ids[tid])) ** 2
+                     for aid in record.destination_probabilities)
+                  for tid, record in commit_records.items())
+    return {"evaluation_point": "first_commit", "committed_count": len(committed),
+            "uncommitted_count": len(threats) - len(committed),
+            "top_destination_accuracy": round(accuracy, 4),
+            "mean_normalized_entropy": round(mean(r.uncertainty for r in committed), 4),
+            "brier_score": round(brier, 4)}
+
+
 def run_scenario(source: Scenario, strategy: str) -> dict[str, Any]:
     if strategy not in {"baseline", "swarmshield"}:
         raise ValueError("strategy must be baseline or swarmshield")
     scenario = clone_scenario(source)
     assets = scenario.asset_map()
     threats = {item.id: item for item in scenario.threats}
-    initial_risks = {
-        item.id: threat_risk(item, assets[item.asset_id]) for item in scenario.threats
-    }
+    histories = {item.id: deque(maxlen=HISTORY_LIMIT) for item in scenario.threats}
+    observed, beliefs = _update_beliefs(0, scenario.threats, assets, histories)
+    initial_beliefs = dict(beliefs)
+    decision_states = {item.id: "HOLD" for item in scenario.threats}
+    commit_records: dict[str, ThreatBelief] = {}
     event_log: list[dict[str, Any]] = []
     trajectories: list[dict[str, Any]] = []
     allocation_snapshots: list[dict[str, Any]] = []
@@ -255,19 +320,26 @@ def run_scenario(source: Scenario, strategy: str) -> dict[str, Any]:
     reassignment_times: list[float] = []
 
     if strategy == "baseline":
-        initial = allocate_baseline(scenario.interceptors, scenario.threats, assets)
+        initial = allocate_baseline(scenario.interceptors, list(observed.values()), beliefs)
         coordination = {"mode": "naive-static", "components": []}
     else:
-        initial, coordination = _swarm_assign(scenario, ground_link)
+        initial, coordination = _swarm_assign(scenario, ground_link, observed, beliefs)
     _apply_assignments(initial, scenario.interceptors, scenario.threats, 0, event_log, "initial allocation")
+    for threat in scenario.threats:
+        assigned = next((iid for iid, tid in initial.items() if tid == threat.id), None)
+        decision_states[threat.id] = "COMMIT" if assigned else "HOLD"
+        if assigned:
+            commit_records[threat.id] = beliefs[threat.id]
+        event_log.append({"time_s": 0, "type": "commit" if assigned else "hold",
+                          "label": f"{threat.id} {'COMMIT' if assigned else 'HOLD'}",
+                          "threat_id": threat.id, "interceptor_id": assigned,
+                          "evidence": _belief_evidence(beliefs[threat.id])})
     allocation_snapshots.append({"time_s": 0, "assignments": initial, **coordination})
 
     for step in range(int(source.duration_s / source.step_s) + 1):
         time_s = round(step * source.step_s, 6)
-        for threat in scenario.threats:
-            if threat.state == "active":
-                threat.predicted_risk = threat_risk(threat, assets[threat.asset_id])
-        trajectories.extend(_snapshot(time_s, scenario.threats, scenario.interceptors))
+        observed, beliefs = _update_beliefs(time_s, scenario.threats, assets, histories)
+        trajectories.extend(_snapshot(time_s, scenario.threats, scenario.interceptors, beliefs, decision_states))
         if time_s >= source.duration_s:
             break
 
@@ -290,7 +362,10 @@ def run_scenario(source: Scenario, strategy: str) -> dict[str, Any]:
             scenario, time_s, ground_link, event_log
         )
         if strategy == "swarmshield" and (scripted_change or step % 5 == 0):
-            proposed, coordination = _swarm_assign(scenario, ground_link)
+            if scripted_change:
+                observed, beliefs = _update_beliefs(time_s, scenario.threats, assets, histories)
+            old_assignments = {item.id: item.target_id for item in scenario.interceptors}
+            proposed, coordination = _swarm_assign(scenario, ground_link, observed, beliefs)
             before_events = len(event_log)
             _apply_assignments(
                 proposed,
@@ -300,6 +375,18 @@ def run_scenario(source: Scenario, strategy: str) -> dict[str, Any]:
                 event_log,
                 "event response" if scripted_change else "periodic rebid",
             )
+            for interceptor_id, threat_id in proposed.items():
+                previous = old_assignments.get(interceptor_id)
+                first_commit = threat_id not in commit_records
+                transition = "commit" if first_commit else "retask"
+                if first_commit:
+                    commit_records[threat_id] = beliefs[threat_id]
+                if first_commit or (previous is not None and previous != threat_id):
+                    event_log.append({"time_s": time_s, "type": transition,
+                                      "label": f"{interceptor_id} {transition.upper()} {threat_id}",
+                                      "threat_id": threat_id, "interceptor_id": interceptor_id,
+                                      "evidence": _belief_evidence(beliefs[threat_id])})
+                decision_states[threat_id] = "COMMIT"
             if len(event_log) > before_events and scripted_change:
                 reassignment_times.append(0.0)
             if orphaned_target_id:
@@ -401,11 +488,11 @@ def run_scenario(source: Scenario, strategy: str) -> dict[str, Any]:
     # leakage only if its present velocity intersects the named asset.
     projected = [
         item for item in unresolved
-        if math.isfinite(time_to_asset(item, assets[item.asset_id]))
+        if math.isfinite(_ground_truth_time_to_asset(item, assets[item.asset_id]))
     ]
     off_course = [item for item in unresolved if item not in projected]
     leaked_effective = leaked + projected
-    expected_leakage = sum(threat_risk(item, assets[item.asset_id]) for item in leaked_effective)
+    expected_leakage = sum(item.p_hostile * assets[item.asset_id].consequence for item in leaked_effective)
     critical_leaks = sum(1 for item in leaked_effective if assets[item.asset_id].consequence >= 75)
     used = [item for item in scenario.interceptors if item.launched]
     decisions = []
@@ -417,9 +504,9 @@ def run_scenario(source: Scenario, strategy: str) -> dict[str, Any]:
                 "threat_id": threat.id,
                 "initial_decision": "intercept" if assigned else "unallocated",
                 "interceptor_id": assigned,
-                "asset_id": threat.asset_id,
-                "risk": round(initial_risks[threat.id], 2),
-                "final_risk": round(threat_risk(threat, assets[threat.asset_id]), 2),
+                "likely_destination_id": initial_beliefs[threat.id].top_destination_id,
+                "risk": round(initial_beliefs[threat.id].risk, 2),
+                "final_risk": round(beliefs[threat.id].risk, 2),
                 "final_state": threat.state,
             }
         )
@@ -444,6 +531,10 @@ def run_scenario(source: Scenario, strategy: str) -> dict[str, Any]:
         "collision_avoidance_actions": collision_conflicts,
         "ground_link_loss_exercised": not ground_link,
         "peer_coordination_active": strategy == "swarmshield" and not ground_link,
+        "prediction_evaluation": _prediction_evaluation(
+            commit_records, scenario.threats,
+            {threat.id: threat.asset_id for threat in scenario.threats},
+        ),
     }
     return {
         "strategy": strategy,
