@@ -12,3 +12,5 @@ venv/
 Thumbs.db
 demo_output/engagement.json
 .worktrees/
+demo/sample_run.json
+demo/metrics.json

@@ -4,8 +4,20 @@ import argparse
 import json
 from pathlib import Path
 
-from swarmshield.scenario import build_scenario
+from swarmshield.scenario import build_hackathon_scenario, build_scenario
 from swarmshield.simulator import run_comparison
+
+
+def build_selected_scenario(args: argparse.Namespace):
+    if args.usp_demo:
+        return build_hackathon_scenario(args.seed)
+    return build_scenario(
+        threat_count=args.threats,
+        interceptor_count=args.interceptors,
+        seed=args.seed,
+        duration_s=args.duration,
+        enable_events=not args.no_events,
+    )
 
 
 def main() -> None:
@@ -16,16 +28,9 @@ def main() -> None:
     parser.add_argument("--interceptors", type=int, default=12)
     parser.add_argument("--duration", type=int, default=190)
     parser.add_argument("--no-events", action="store_true")
+    parser.add_argument("--usp-demo", action="store_true", help="Use the reproducible uncertainty-aware USP scenario")
     args = parser.parse_args()
-    result = run_comparison(
-        build_scenario(
-            threat_count=args.threats,
-            interceptor_count=args.interceptors,
-            seed=args.seed,
-            duration_s=args.duration,
-            enable_events=not args.no_events,
-        )
-    )
+    result = run_comparison(build_selected_scenario(args))
     if args.export:
         args.export.parent.mkdir(parents=True, exist_ok=True)
         args.export.write_text(json.dumps(result, indent=2), encoding="utf-8")

@@ -49,6 +49,25 @@ The model supports its documented input bounds. It may score below the baseline 
 
 If `python` is not on PATH on Windows, try the Python launcher (`py`) instead.
 
+## Standalone 3D USP demo
+
+The standalone Matplotlib viewer explains how recorded destination uncertainty drives HOLD / PRESERVE, COMMIT, failure recovery, and RETASK decisions. It is a read-only visualization of the existing SwarmShield version-1.0 export: it does not run another predictor, risk model, allocator, or simulator. Probability values come directly from recorded `ThreatBelief` snapshots. The browser webapp remains the main operational interface.
+
+Install the only additional dependency:
+
+```powershell
+pip install matplotlib
+```
+
+Generate the reproducible recording from the real simulator, then launch the viewer:
+
+```powershell
+python run.py --usp-demo --export demo/sample_run.json
+python demo/demo_usp_3d.py --input demo/sample_run.json --threat T05
+```
+
+Omit `--threat` to deterministically select the best recorded HOLD → COMMIT → RETASK sequence. Controls are **Space** to play/pause, **Left/Right** to step, and **R** to restart. The generated `demo/sample_run.json` is intentionally ignored because it is large and reproducible.
+
 ## Validate and export
 
 ```powershell
