@@ -24,6 +24,7 @@ class Asset:
     position: Vec2
     consequence: float
     kind: str
+    radius_m: float = 300.0
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -32,6 +33,7 @@ class Asset:
             "position": self.position.to_dict(),
             "consequence": self.consequence,
             "kind": self.kind,
+            "radius_m": self.radius_m,
         }
 
 
@@ -94,7 +96,9 @@ class Scenario:
     hit_radius_m: float = 180.0
     commitment_distance_m: float = 2200.0
     p2p_radius_m: float = 9000.0
+    peer_visibility_m: float = 28000.0
+    seed: int | None = None
+    profile: str = "custom"
 
     def asset_map(self) -> dict[str, Asset]:
         return {asset.id: asset for asset in self.assets}
-

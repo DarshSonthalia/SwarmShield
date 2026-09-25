@@ -10,7 +10,7 @@
   <main>
     <header class="topbar">
       <div class="brand"><span class="mark">S</span><div><h1>SWARMSHIELD</h1><p>SCARCITY-AWARE SWARM ALLOCATION</p></div></div>
-      <div class="status"><span class="pulse"></span><span id="systemStatus">SIMULATION READY</span></div>
+      <div class="status"><span class="pulse"></span><span id="systemStatus">SIMULATION READY</span><small>OFFLINE MODEL · NO LIVE DATA</small></div>
     </header>
 
     <section class="hero-grid">
@@ -25,25 +25,29 @@
         <form class="scenario-builder" id="scenarioForm">
           <label>Threats<input id="threatCount" type="number" min="1" max="200" value="20"></label>
           <label>Interceptors<input id="interceptorCount" type="number" min="0" max="120" value="12"></label>
-          <label>Seed<input id="seedValue" type="number" min="0" max="1000000" value="42"></label>
+          <label>Seed <span class="field-hint">repeatable variation</span><input id="seedValue" type="number" min="0" max="1000000" value="42" title="The same seed and settings reproduce the same generated scenario. Change it to test a different one."></label>
           <label>Duration (s)<input id="durationValue" type="number" min="30" max="600" value="190"></label>
+          <label>Scenario pattern<select id="profileValue" title="Choose how incoming tracks are distributed across the city."><option value="mixed">Mixed</option><option value="concentrated">Concentrated</option><option value="dispersed">Dispersed</option><option value="uncertain">Uncertain</option></select></label>
           <label class="event-check"><input id="eventsEnabled" type="checkbox" checked> Dynamic events</label>
           <button class="secondary" id="generateButton" type="submit">Generate scenario</button>
         </form>
+        <details class="model-help"><summary>What do these controls and results mean?</summary><p><b>Seed</b> reproduces one generated layout; it is not a model confidence score. <b>Pattern</b> changes the mix of routes and confidence. <b>Dynamic events</b> adds revised assessments, route changes, resource failure, and simulated link disruption. <b>Expected consequence</b> is a scenario score, not a real-world casualty estimate. Both strategies run on the same inputs.</p></details>
         <details class="custom-scenario" id="customScenario">
           <summary>Advanced: edit a complete scenario</summary>
-          <p>Adjust assets, positions, velocities, confidence, interceptor capabilities, and events in JSON. The current scenario is a starting template.</p>
+          <p>Adjust protected-zone footprints and consequence, positions, velocities, confidence, resource capabilities, and events in JSON. The current scenario is a starting template.</p>
           <textarea id="customJson" spellcheck="false" aria-label="Custom scenario JSON"></textarea>
           <div class="custom-actions"><button class="secondary" id="loadTemplate" type="button">Reset to current scenario</button><button class="secondary" id="runCustom" type="button">Run custom scenario</button></div>
         </details>
         <div class="canvas-wrap">
-          <canvas id="tacticalMap" width="1200" height="720" aria-label="Tactical engagement map"></canvas>
-          <div class="legend"><span><i class="dot threat"></i>Threat</span><span><i class="dot interceptor"></i>Interceptor</span><span><i class="dot unallocated"></i>Explicit leakage</span></div>
+          <canvas id="tacticalMap" width="1200" height="720" aria-label="Synthetic city scenario map"></canvas>
+          <div class="map-caption" id="mapCaption">SYNTHETIC CITY · METRE SCALE · NOT GIS DATA</div>
+          <button class="map-view" id="mapViewButton" type="button">City close-up</button>
+          <div class="legend"><span><i class="dot threat"></i>Track assigned</span><span><i class="dot interceptor"></i>Interceptor</span><span><i class="dot unallocated"></i>Unassigned track</span></div>
           <div class="event-banner" id="eventBanner">SCENARIO GENERATED</div>
         </div>
         <div class="playback">
           <button id="playButton" class="primary">▶ Run engagement</button>
-          <div class="timeline"><input id="timeSlider" type="range" min="0" max="190" value="0" step="1"><div><span id="timeLabel">T+000 s</span><span id="compressionLabel">SIM / 6.3× DEMO COMPRESSION</span></div></div>
+          <div class="timeline"><input id="timeSlider" type="range" min="0" max="190" value="0" step="1"><div><span id="timeLabel">T+000 s</span><span id="compressionLabel">UP TO 10× PLAYBACK</span></div></div>
         </div>
       </article>
 
@@ -62,11 +66,12 @@
         <article class="panel network-panel">
           <div class="panel-title"><p class="eyebrow">COORDINATION</p><span id="networkMode" class="badge">GROUND LINK</span></div>
           <div class="network-visual" id="networkPeers"></div>
-          <p id="networkDetail">Central cue available. Decisions remain locally executable.</p>
+          <p id="networkDetail">Ground coordination simulated. No radio or packet transport is connected.</p>
         </article>
 
         <article class="panel decision-panel">
-          <p class="eyebrow">DECISION AUDIT</p>
+          <p class="eyebrow">LIVE PRIORITIES</p>
+          <p class="panel-subtitle" id="prioritySubtitle">Updates as tracks, assessments, and protected zones change.</p>
           <div id="decisionList" class="decision-list"></div>
         </article>
       </aside>
@@ -76,6 +81,7 @@
       <div><p class="eyebrow" id="sameRaidLabel">SAME RAID. SAME RESOURCES.</p><h2>Compare outcomes across the same raid.</h2></div>
       <div class="comparison-table" id="comparisonTable"></div>
     </section>
+    <details class="model-help model-footnote"><summary>Model boundaries and deployment gaps</summary><p>This is an advisory simulation. Protected zones are geometric footprints; track confidence and consequences are supplied scenario inputs. Peer mode models proximity groups and possible conflicting claims, but has no radios, routing, authentication, packet loss, or human authorization interface. It cannot be used to control a real system.</p></details>
   </main>
   <script src="/app.js"></script>
 </body>

@@ -1,7 +1,7 @@
 {
   "headline": {
-    "expected_consequence_reduction_percent": 55.3,
-    "critical_leaks_avoided": 4
+    "expected_consequence_reduction_percent": 21.3,
+    "critical_leaks_avoided": 0
   },
   "baseline": {
     "strategy": "baseline",
@@ -13,15 +13,19 @@
     "projected_leakage": 0,
     "off_course_unresolved": 0,
     "leakage_percent": 45.0,
-    "critical_leaks": 5,
-    "expected_consequence_leaked": 480.58,
+    "critical_leaks": 6,
+    "expected_consequence_leaked": 338.11,
     "interceptors_launched": 12,
-    "defensive_cost": 20.0,
+    "defensive_cost": 18.0,
     "reassignments": 0,
     "reassignment_latency_s": null,
     "collision_avoidance_actions": 0,
     "ground_link_loss_exercised": true,
-    "peer_coordination_active": false
+    "peer_coordination_exercised": false,
+    "peer_coordination_active_at_end": false,
+    "max_peer_groups": 0,
+    "peer_conflict_snapshots": 0,
+    "priority_update_events": 3
   },
   "swarmshield": {
     "strategy": "swarmshield",
@@ -33,14 +37,18 @@
     "projected_leakage": 0,
     "off_course_unresolved": 0,
     "leakage_percent": 45.0,
-    "critical_leaks": 1,
-    "expected_consequence_leaked": 214.58,
+    "critical_leaks": 6,
+    "expected_consequence_leaked": 266.25,
     "interceptors_launched": 12,
-    "defensive_cost": 20.0,
-    "reassignments": 1,
+    "defensive_cost": 18.0,
+    "reassignments": 9,
     "reassignment_latency_s": 0.0,
-    "collision_avoidance_actions": 8,
+    "collision_avoidance_actions": 22,
     "ground_link_loss_exercised": true,
-    "peer_coordination_active": true
+    "peer_coordination_exercised": true,
+    "peer_coordination_active_at_end": false,
+    "max_peer_groups": 3,
+    "peer_conflict_snapshots": 9,
+    "priority_update_events": 3
   }
 }

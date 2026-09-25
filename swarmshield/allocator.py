@@ -19,19 +19,22 @@ class PairScore:
 
 
 def time_to_asset(threat: Threat, asset: Asset) -> float:
-    dx = asset.position.x - threat.position.x
-    dy = asset.position.y - threat.position.y
+    """First entry into a protected circular footprint on a straight path."""
+    dx = threat.position.x - asset.position.x
+    dy = threat.position.y - asset.position.y
     vx, vy = threat.velocity.x, threat.velocity.y
     speed_squared = vx * vx + vy * vy
     if speed_squared <= 0:
         return float("inf")
-    time = (dx * vx + dy * vy) / speed_squared
-    if time < 0:
+    c = dx * dx + dy * dy - asset.radius_m * asset.radius_m
+    if c <= 0:
+        return 0.0
+    b = 2.0 * (dx * vx + dy * vy)
+    discriminant = b * b - 4.0 * speed_squared * c
+    if discriminant < 0:
         return float("inf")
-    miss_distance = math.hypot(dx - vx * time, dy - vy * time)
-    if miss_distance > 300.0:
-        return float("inf")
-    return time
+    entry = (-b - math.sqrt(discriminant)) / (2.0 * speed_squared)
+    return entry if entry >= 0 else float("inf")
 
 
 def threat_risk(threat: Threat, asset: Asset) -> float:
@@ -94,7 +97,7 @@ def score_pair(interceptor: Interceptor, threat: Threat, asset: Asset) -> PairSc
     energy_penalty = 0.65 * distance / max(effective_range, 1.0)
     # A modest switching cost prevents assignments from oscillating every
     # auction round while leaving a newly critical track able to win a rebid.
-    continuity_bonus = 0.65 * risk if interceptor.target_id == threat.id else 0.0
+    continuity_bonus = min(5.0, 0.08 * risk) if interceptor.target_id == threat.id else 0.0
     utility = risk * probability - time_penalty - resource_penalty - energy_penalty + continuity_bonus
     return PairScore(
         interceptor.id,

@@ -21,6 +21,7 @@ def generate_payload(
     seed: int = 42,
     duration_s: int = 190,
     enable_events: bool = True,
+    profile: str = "mixed",
 ) -> dict:
     return run_comparison(
         build_scenario(
@@ -29,6 +30,7 @@ def generate_payload(
             seed=seed,
             duration_s=duration_s,
             enable_events=enable_events,
+            profile=profile,
         )
     )
 
@@ -42,7 +44,7 @@ def _bounded_int(query: dict[str, list[str]], name: str, default: int, minimum: 
 
 
 class SwarmShieldHandler(BaseHTTPRequestHandler):
-    server_version = "SwarmShield/1.0"
+    server_version = "SwarmShield/1.1"
 
     def _send(self, status: int, content_type: str, body: bytes) -> None:
         self.send_response(status)
@@ -56,7 +58,7 @@ class SwarmShieldHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path
         if path == "/api/health":
-            self._send(200, "application/json", b'{"status":"ok","version":"1.0"}')
+            self._send(200, "application/json", b'{"status":"ok","version":"1.1"}')
             return
         if path == "/api/run":
             try:
@@ -67,6 +69,7 @@ class SwarmShieldHandler(BaseHTTPRequestHandler):
                     seed=_bounded_int(query, "seed", 42, 0, 1_000_000),
                     duration_s=_bounded_int(query, "duration", 190, 30, 600),
                     enable_events=query.get("events", ["1"])[0] not in {"0", "false", "off"},
+                    profile=query.get("profile", ["mixed"])[0],
                 )
                 body = json.dumps(payload, separators=(",", ":")).encode("utf-8")
                 self._send(200, "application/json", body)

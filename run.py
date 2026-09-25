@@ -15,6 +15,7 @@ def main() -> None:
     parser.add_argument("--threats", type=int, default=20)
     parser.add_argument("--interceptors", type=int, default=12)
     parser.add_argument("--duration", type=int, default=190)
+    parser.add_argument("--profile", choices=["mixed", "concentrated", "dispersed", "uncertain"], default="mixed")
     parser.add_argument("--no-events", action="store_true")
     args = parser.parse_args()
     result = run_comparison(
@@ -24,6 +25,7 @@ def main() -> None:
             seed=args.seed,
             duration_s=args.duration,
             enable_events=not args.no_events,
+            profile=args.profile,
         )
     )
     if args.export:

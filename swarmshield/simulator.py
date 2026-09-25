@@ -33,6 +33,7 @@ def _snapshot(time_s: float, threats: list[Threat], interceptors: list[Intercept
                 "state": threat.state,
                 "assignment": threat.assigned_interceptor,
                 "risk": round(threat.predicted_risk, 3),
+                "confidence": round(threat.p_hostile, 3),
                 "asset_id": threat.asset_id,
             }
         )
@@ -88,7 +89,8 @@ def _apply_assignments(
     time_s: float,
     event_log: list[dict[str, Any]],
     reason: str,
-) -> None:
+    allow_peer_conflicts: bool = False,
+) -> int:
     interceptor_map = {item.id: item for item in interceptors}
     threat_map = {item.id: item for item in threats}
     locked_targets = {
@@ -101,7 +103,7 @@ def _apply_assignments(
         if interceptor.committed or interceptor.state in {"failed", "spent"}:
             continue
         new_target = proposed.get(interceptor.id)
-        if new_target in claimed:
+        if new_target in claimed and not allow_peer_conflicts:
             new_target = None
         old_target = interceptor.target_id
         if old_target != new_target:
@@ -130,6 +132,21 @@ def _apply_assignments(
     for interceptor in interceptors:
         if interceptor.committed and interceptor.target_id in threat_map:
             threat_map[interceptor.target_id].assigned_interceptor = interceptor.id
+    claims: dict[str, list[str]] = defaultdict(list)
+    for interceptor in interceptors:
+        if interceptor.state == "engaging" and interceptor.target_id:
+            claims[interceptor.target_id].append(interceptor.id)
+    conflicts = {target_id: ids for target_id, ids in claims.items() if len(ids) > 1}
+    if allow_peer_conflicts:
+        for target_id, ids in conflicts.items():
+            event_log.append({
+                "time_s": time_s,
+                "type": "peer_conflict",
+                "label": f"Disconnected peers both claim {target_id}: {', '.join(ids)}",
+                "threat_id": target_id,
+                "interceptor_ids": ids,
+            })
+    return len(conflicts)
 
 
 def _swarm_assign(
@@ -147,20 +164,25 @@ def _swarm_assign(
         assignments, _ = allocate_swarmshield(free, active, assets)
         return assignments, {"mode": "central-seeded", "components": [sorted(i.id for i in free)]}
 
-    # Under ground-link loss, each connected peer component runs the same local
-    # auction. A deterministic claim ledger models bids forwarded between
-    # components whenever a bridging peer becomes available.
+    # Disconnected components have no shared claim ledger. Each group sees
+    # only nearby tracks, so conflicting proposals remain visible in output.
     components = _connected_components(free, scenario.p2p_radius_m)
     by_id = {item.id: item for item in free}
-    claimed: set[str] = set()
     merged: dict[str, str] = {}
+    visibility: dict[str, int] = {}
     for component in sorted(components, key=lambda ids: (-len(ids), ids)):
         local_interceptors = [by_id[item_id] for item_id in component]
-        visible = [threat for threat in active if threat.id not in claimed]
+        visible = [
+            threat for threat in active
+            if any(item.position.distance_to(threat.position) <= scenario.peer_visibility_m
+                   for item in local_interceptors)
+        ]
         local, _ = allocate_swarmshield(local_interceptors, visible, assets)
         merged.update(local)
-        claimed.update(local.values())
-    return merged, {"mode": "peer-to-peer", "components": components}
+        visibility[component[0]] = len(visible)
+    return merged, {"mode": "peer-to-peer", "components": components,
+                    "visible_tracks_by_component": visibility,
+                    "peer_radius_m": scenario.p2p_radius_m}
 
 
 def _process_scripted_events(
@@ -175,6 +197,12 @@ def _process_scripted_events(
     interceptor_map = {item.id: item for item in scenario.interceptors}
     for event in scenario.events:
         if event["time_s"] != time_s:
+            continue
+        if event["type"] in {"threat_diversion", "confidence_update"} and threat_map[event["threat_id"]].state != "active":
+            event_log.append({
+                "time_s": time_s, "type": "stale_event", "original_type": event["type"],
+                "label": f"{event['threat_id']} update ignored; track is no longer active",
+            })
             continue
         event_log.append(dict(event))
         changed = True
@@ -196,6 +224,14 @@ def _process_scripted_events(
             interceptor.committed = False
         elif event["type"] == "ground_link_loss":
             ground_link = False
+        elif event["type"] == "ground_link_restore":
+            ground_link = True
+        elif event["type"] == "confidence_update":
+            threat_map[event["threat_id"]].p_hostile = event["new_confidence"]
+        elif event["type"] == "asset_consequence_change":
+            assets[event["asset_id"]].consequence = event["new_consequence"]
+        elif event["type"] == "peer_link_degradation":
+            scenario.p2p_radius_m = event["new_radius_m"]
     return ground_link, changed
 
 
@@ -244,15 +280,29 @@ def run_scenario(source: Scenario, strategy: str) -> dict[str, Any]:
     scenario = clone_scenario(source)
     assets = scenario.asset_map()
     threats = {item.id: item for item in scenario.threats}
+    event_log: list[dict[str, Any]] = []
+    for threat in scenario.threats:
+        asset = assets[threat.asset_id]
+        if threat.position.distance_to(asset.position) <= asset.radius_m:
+            threat.state = "leaked"
+            event_log.append({
+                "time_s": 0.0, "type": "leak", "threat_id": threat.id,
+                "asset_id": asset.id, "label": f"{threat.id} begins inside {asset.name}",
+            })
     initial_risks = {
         item.id: threat_risk(item, assets[item.asset_id]) for item in scenario.threats
     }
-    event_log: list[dict[str, Any]] = []
     trajectories: list[dict[str, Any]] = []
     allocation_snapshots: list[dict[str, Any]] = []
     ground_link = True
     collision_conflicts = 0
+    peer_conflicts = 0
     reassignment_times: list[float] = []
+    total_frames = int(source.duration_s / source.step_s) + 1
+    # Preserve every simulation step internally; only downsample the visual
+    # output when a very large scenario would overwhelm a browser tab.
+    sample_stride = max(1, math.ceil(total_frames * (len(scenario.threats) + len(scenario.interceptors)) / 25000))
+    event_times = {event["time_s"] for event in scenario.events}
 
     if strategy == "baseline":
         initial = allocate_baseline(scenario.interceptors, scenario.threats, assets)
@@ -264,12 +314,6 @@ def run_scenario(source: Scenario, strategy: str) -> dict[str, Any]:
 
     for step in range(int(source.duration_s / source.step_s) + 1):
         time_s = round(step * source.step_s, 6)
-        for threat in scenario.threats:
-            if threat.state == "active":
-                threat.predicted_risk = threat_risk(threat, assets[threat.asset_id])
-        trajectories.extend(_snapshot(time_s, scenario.threats, scenario.interceptors))
-        if time_s >= source.duration_s:
-            break
 
         orphaned_target_id = None
         failure = next(
@@ -292,13 +336,14 @@ def run_scenario(source: Scenario, strategy: str) -> dict[str, Any]:
         if strategy == "swarmshield" and (scripted_change or step % 5 == 0):
             proposed, coordination = _swarm_assign(scenario, ground_link)
             before_events = len(event_log)
-            _apply_assignments(
+            peer_conflicts += _apply_assignments(
                 proposed,
                 scenario.interceptors,
                 scenario.threats,
                 time_s,
                 event_log,
                 "event response" if scripted_change else "periodic rebid",
+                allow_peer_conflicts=not ground_link,
             )
             if len(event_log) > before_events and scripted_change:
                 reassignment_times.append(0.0)
@@ -327,6 +372,14 @@ def run_scenario(source: Scenario, strategy: str) -> dict[str, Any]:
             allocation_snapshots.append(
                 {"time_s": time_s, "assignments": proposed, **coordination}
             )
+
+        for threat in scenario.threats:
+            if threat.state == "active":
+                threat.predicted_risk = threat_risk(threat, assets[threat.asset_id])
+        if step % sample_stride == 0 or time_s in event_times or time_s >= source.duration_s:
+            trajectories.extend(_snapshot(time_s, scenario.threats, scenario.interceptors))
+        if time_s >= source.duration_s:
+            break
 
         # Incoming tracks advance toward their currently predicted impact asset.
         for threat in scenario.threats:
@@ -382,7 +435,7 @@ def run_scenario(source: Scenario, strategy: str) -> dict[str, Any]:
             if threat.state != "active":
                 continue
             asset = assets[threat.asset_id]
-            if threat.position.distance_to(asset.position) <= max(260.0, threat.speed() * source.step_s):
+            if threat.position.distance_to(asset.position) <= max(asset.radius_m, threat.speed() * source.step_s):
                 threat.state = "leaked"
                 event_log.append(
                     {
@@ -442,8 +495,17 @@ def run_scenario(source: Scenario, strategy: str) -> dict[str, Any]:
         if reassignment_times
         else None,
         "collision_avoidance_actions": collision_conflicts,
-        "ground_link_loss_exercised": not ground_link,
-        "peer_coordination_active": strategy == "swarmshield" and not ground_link,
+        "ground_link_loss_exercised": any(event["type"] == "ground_link_loss" for event in event_log),
+        "peer_coordination_exercised": strategy == "swarmshield" and any(
+            item["mode"] == "peer-to-peer" for item in allocation_snapshots
+        ),
+        "peer_coordination_active_at_end": strategy == "swarmshield" and not ground_link,
+        "max_peer_groups": max((len(item["components"]) for item in allocation_snapshots
+                                if item["mode"] == "peer-to-peer"), default=0),
+        "peer_conflict_snapshots": peer_conflicts,
+        "priority_update_events": sum(event["type"] in {
+            "threat_diversion", "confidence_update", "asset_consequence_change"
+        } for event in event_log),
     }
     return {
         "strategy": strategy,
@@ -452,6 +514,7 @@ def run_scenario(source: Scenario, strategy: str) -> dict[str, Any]:
         "events": sorted(event_log, key=lambda item: item["time_s"]),
         "allocations": allocation_snapshots,
         "trajectories": trajectories,
+        "visual_sample_step_s": sample_stride * source.step_s,
     }
 
 
@@ -471,13 +534,15 @@ def run_comparison(scenario: Scenario) -> dict[str, Any]:
             "interceptor_count": len(scenario.interceptors),
             "duration_s": scenario.duration_s,
             "step_s": scenario.step_s,
-            "seed": 42,
+            "seed": scenario.seed,
+            "profile": scenario.profile,
             "scale": "1 unit = 1 metre",
             "assumptions": [
                 "One interceptor can make at most one interception attempt.",
                 "Interceptors run targets down from behind.",
                 "Unallocated is an explicit optimization decision.",
                 "Allocation is advisory/simulated; no weapons or real control interfaces are included.",
+                "Peer groups have proximity-based visibility; no radios or message transport are modeled.",
             ],
             "assets": [asset.to_dict() for asset in scenario.assets],
             "definition": scenario_to_dict(scenario),

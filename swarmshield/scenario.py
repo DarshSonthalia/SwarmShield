@@ -20,8 +20,9 @@ def build_scenario(
     seed: int = 42,
     duration_s: int = 190,
     enable_events: bool = True,
+    profile: str = "mixed",
 ) -> Scenario:
-    """Generate an arbitrary, deterministic scarcity scenario.
+    """Generate a reproducible synthetic scenario across several stress profiles.
 
     The counts are true model inputs rather than display parameters. Distances
     are metres and time is seconds. Interceptors start north of the inbound
@@ -33,26 +34,24 @@ def build_scenario(
         raise ValueError("interceptor_count must be between 0 and 120")
     if not 30 <= duration_s <= 600:
         raise ValueError("duration_s must be between 30 and 600")
+    if profile not in {"mixed", "concentrated", "dispersed", "uncertain"}:
+        raise ValueError("profile must be mixed, concentrated, dispersed, or uncertain")
     rng = random.Random(seed)
     assets = [
-        Asset("A01", "Command Centre", Vec2(0, -5200), 100, "critical"),
-        Asset("A02", "Airbase", Vec2(-6200, -4300), 90, "critical"),
-        Asset("A03", "Power Substation", Vec2(4600, -4700), 76, "critical"),
-        Asset("A04", "Industrial Zone", Vec2(7600, -3600), 42, "important"),
-        Asset("A05", "Open Water", Vec2(-9800, -1500), 6, "low-consequence"),
+        Asset("A01", "Command Centre", Vec2(0, -5200), 100, "critical", 450),
+        Asset("A02", "Airbase", Vec2(-6200, -4300), 90, "critical", 950),
+        Asset("A03", "Power Substation", Vec2(4600, -4700), 76, "critical", 420),
+        Asset("A04", "Industrial Zone", Vec2(7600, -3600), 42, "important", 1100),
+        Asset("A05", "Open Water", Vec2(-9800, -1500), 6, "low-consequence", 1250),
     ]
     assets_by_id = {asset.id: asset for asset in assets}
 
-    # Deliberately mixed confidence and consequence. T05 begins as a likely
-    # decoy bound for open water, then diverts toward A01 during the run.
-    asset_pattern = [
-        "A01", "A02", "A03", "A01", "A05", "A04", "A02", "A05", "A03", "A04",
-        "A05", "A01", "A02", "A04", "A03", "A05", "A04", "A01", "A05", "A02",
-    ]
-    confidence_pattern = [
-        0.97, 0.93, 0.91, 0.88, 0.26, 0.76, 0.89, 0.31, 0.84, 0.70,
-        0.18, 0.95, 0.81, 0.62, 0.86, 0.22, 0.67, 0.92, 0.35, 0.79,
-    ]
+    weights = {
+        "mixed": [3.0, 2.3, 2.2, 1.8, 1.6],
+        "concentrated": [7.0, 1.1, 1.0, 0.6, 0.3],
+        "dispersed": [1.0, 1.0, 1.0, 1.0, 1.0],
+        "uncertain": [2.0, 2.0, 2.0, 1.5, 2.0],
+    }[profile]
     threats: list[Threat] = []
     row_width = min(24, threat_count)
     for idx in range(threat_count):
@@ -62,15 +61,18 @@ def build_scenario(
         x = -10600 + fraction * 21200 + rng.uniform(-180, 180)
         y = 13600 + row * 620 + (idx % 4) * 240 + rng.uniform(-90, 90)
         start = Vec2(x, y)
-        speed = 118 + (idx % 5) * 7 + rng.uniform(-2, 2)
-        asset_id = asset_pattern[idx % len(asset_pattern)]
+        speed = rng.uniform(116, 148)
+        asset_id = rng.choices(list(assets_by_id), weights=weights, k=1)[0]
+        confidence = rng.uniform(0.18, 0.76) if profile == "uncertain" else rng.betavariate(3.2, 1.55)
+        if asset_id == "A05":
+            confidence *= rng.uniform(0.45, 0.75)
         velocity = _velocity_toward(start, assets_by_id[asset_id].position, speed)
         threats.append(
             Threat(
                 id=f"T{idx + 1:02d}",
                 position=start,
                 velocity=velocity,
-                p_hostile=max(0.05, min(0.99, confidence_pattern[idx % len(confidence_pattern)] + rng.uniform(-0.025, 0.025))),
+                p_hostile=max(0.05, min(0.99, confidence)),
                 asset_id=asset_id,
                 altitude_m=420 + (idx % 5) * 75,
             )
@@ -86,7 +88,7 @@ def build_scenario(
         fraction = 0.5 if interceptor_row_width == 1 else column / (interceptor_row_width - 1)
         x = -9800 + fraction * 19600
         y = 18100 + row * 620 + (idx % 2) * 280
-        fast = idx in {1, 4, 7, 10}
+        fast = idx % 4 == 1
         interceptors.append(
             Interceptor(
                 id=f"I{idx + 1:02d}",
@@ -101,34 +103,54 @@ def build_scenario(
             )
         )
 
-    events = []
-    if enable_events and threats:
-        diversion_index = min(4, len(threats) - 1)
-        events.append({
-            "time_s": max(5, round(duration_s * 0.17)),
-            "type": "threat_diversion",
-            "threat_id": threats[diversion_index].id,
-            "new_asset_id": "A01",
-            "new_confidence": 0.94,
-            "label": f"{threats[diversion_index].id} changes course toward Command Centre",
-        })
-    if enable_events and interceptors:
-        failure_index = min(6, len(interceptors) - 1)
-        events.append({
-            "time_s": max(8, round(duration_s * 0.10)),
-            "type": "interceptor_failure",
-            "interceptor_id": interceptors[failure_index].id,
-            "label": f"{interceptors[failure_index].id} fails before commitment",
-        })
+    events: list[dict[str, Any]] = []
     if enable_events:
-        events.append({
-            "time_s": max(12, round(duration_s * 0.347)),
-            "type": "ground_link_loss",
-            "label": "Ground link lost - peer coordination continues",
-        })
+        if interceptors:
+            from .allocator import allocate_swarmshield
+
+            initial, _ = allocate_swarmshield(interceptors, threats, assets_by_id)
+            failure_id = rng.choice(sorted(initial)) if initial else interceptors[0].id
+            events.append({
+                "time_s": max(5, round(duration_s * 0.10)),
+                "type": "interceptor_failure",
+                "interceptor_id": failure_id,
+                "label": f"{failure_id} loses availability",
+            })
+        if threats:
+            water_tracks = [item for item in threats if item.asset_id == "A05"]
+            diversion = min(water_tracks or threats, key=lambda item: item.p_hostile)
+            destination = "A01" if diversion.asset_id != "A01" else "A02"
+            events.append({
+                "time_s": max(6, round(duration_s * 0.17)),
+                "type": "threat_diversion",
+                "threat_id": diversion.id,
+                "new_asset_id": destination,
+                "new_confidence": 0.94,
+                "label": f"{diversion.id} changes course toward {assets_by_id[destination].name}",
+            })
+        if len(threats) > 1:
+            revised = max((item for item in threats if item.id != diversion.id), key=lambda item: item.p_hostile)
+            events.append({
+                "time_s": max(7, round(duration_s * 0.22)),
+                "type": "confidence_update",
+                "threat_id": revised.id,
+                "new_confidence": 0.18,
+                "label": f"{revised.id} assessment revised downward",
+            })
+        events.extend([
+            {"time_s": max(8, round(duration_s * 0.13)), "type": "ground_link_loss",
+             "label": "Ground link lost; local peer groups take over"},
+            {"time_s": max(9, round(duration_s * 0.19)), "type": "peer_link_degradation",
+             "new_radius_m": 3500.0, "label": "Peer connectivity degrades"},
+            {"time_s": max(10, round(duration_s * 0.27)), "type": "asset_consequence_change",
+             "asset_id": "A04", "new_consequence": 82.0,
+             "label": "Industrial district consequence increases"},
+            {"time_s": max(11, round(duration_s * 0.38)), "type": "ground_link_restore",
+             "label": "Ground link restored"},
+        ])
     events.sort(key=lambda event: event["time_s"])
     return Scenario(
-        name=f"Saturation Raid {threat_count} v {interceptor_count}",
+        name=f"{profile.title()} City Scenario · {threat_count} tracks / {interceptor_count} interceptors",
         duration_s=duration_s,
         step_s=1.0,
         assets=assets,
@@ -136,6 +158,8 @@ def build_scenario(
         interceptors=interceptors,
         events=events,
         safety_radius_m=500.0,
+        seed=seed,
+        profile=profile,
     )
 
 
@@ -218,6 +242,7 @@ def scenario_from_dict(raw: dict[str, Any]) -> Scenario:
             _vec(item.get("position"), f"assets[{idx}].position"),
             _finite_number(item.get("consequence"), f"assets[{idx}].consequence", 0, 1000),
             kind,
+            _finite_number(item.get("radius_m", 300), f"assets[{idx}].radius_m", 50, 5000),
         ))
     asset_ids = {asset.id for asset in assets}
     if len(asset_ids) != len(assets):
@@ -275,7 +300,11 @@ def scenario_from_dict(raw: dict[str, Any]) -> Scenario:
         if not isinstance(item, dict):
             raise ValueError(f"events[{idx}] must be an object")
         event_type = item.get("type")
-        if event_type not in {"threat_diversion", "interceptor_failure", "ground_link_loss"}:
+        if event_type not in {
+            "threat_diversion", "confidence_update", "asset_consequence_change",
+            "interceptor_failure", "ground_link_loss", "ground_link_restore",
+            "peer_link_degradation",
+        }:
             raise ValueError(f"events[{idx}].type is invalid")
         event_time = _integer(item.get("time_s"), f"events[{idx}].time_s", 0, duration - 1)
         event = {"type": event_type, "time_s": event_time}
@@ -291,10 +320,31 @@ def scenario_from_dict(raw: dict[str, Any]) -> Scenario:
             if interceptor_id not in interceptor_ids:
                 raise ValueError(f"events[{idx}] refers to an unknown interceptor")
             event["interceptor_id"] = interceptor_id
+        if event_type == "confidence_update":
+            threat_id = _positive_id(item.get("threat_id"), f"events[{idx}].threat_id")
+            if threat_id not in threat_ids:
+                raise ValueError(f"events[{idx}] refers to an unknown threat")
+            event.update(
+                threat_id=threat_id,
+                new_confidence=_finite_number(item.get("new_confidence"), f"events[{idx}].new_confidence", 0, 1),
+            )
+        if event_type == "asset_consequence_change":
+            changed_asset_id = _positive_id(item.get("asset_id"), f"events[{idx}].asset_id")
+            if changed_asset_id not in asset_ids:
+                raise ValueError(f"events[{idx}] refers to an unknown asset")
+            event.update(
+                asset_id=changed_asset_id,
+                new_consequence=_finite_number(item.get("new_consequence"), f"events[{idx}].new_consequence", 0, 1000),
+            )
+        if event_type == "peer_link_degradation":
+            event["new_radius_m"] = _finite_number(item.get("new_radius_m"), f"events[{idx}].new_radius_m", 100, 100000)
         event["label"] = str(item.get("label") or event_type.replace("_", " ").title())[:120]
         events.append(event)
     events.sort(key=lambda item: item["time_s"])
 
+    seed = raw.get("seed")
+    if seed is not None:
+        seed = _integer(seed, "seed", 0, 1_000_000)
     return Scenario(
         name=name, duration_s=duration, step_s=step, assets=assets,
         threats=threats, interceptors=interceptors, events=events,
@@ -302,6 +352,9 @@ def scenario_from_dict(raw: dict[str, Any]) -> Scenario:
         hit_radius_m=_finite_number(raw.get("hit_radius_m", 180), "hit_radius_m", 1, 1000),
         commitment_distance_m=_finite_number(raw.get("commitment_distance_m", 2200), "commitment_distance_m", 100, 20000),
         p2p_radius_m=_finite_number(raw.get("p2p_radius_m", 9000), "p2p_radius_m", 100, 100000),
+        peer_visibility_m=_finite_number(raw.get("peer_visibility_m", 28000), "peer_visibility_m", 100, 200000),
+        seed=seed,
+        profile="custom",
     )
 
 
@@ -341,4 +394,7 @@ def scenario_to_dict(scenario: Scenario) -> dict[str, Any]:
         "hit_radius_m": scenario.hit_radius_m,
         "commitment_distance_m": scenario.commitment_distance_m,
         "p2p_radius_m": scenario.p2p_radius_m,
+        "peer_visibility_m": scenario.peer_visibility_m,
+        "seed": scenario.seed,
+        "profile": scenario.profile,
     }
