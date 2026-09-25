@@ -17,7 +17,9 @@ Open `http://127.0.0.1:8765` in a browser.
 Expected:
 
 - Header reads `SCENARIO READY / SEED 42`.
-- The map shows 20 threat markers, 12 interceptor markers, and five protected assets.
+- The 3D scene shows 20 threat markers, 12 interceptor markers, and five labelled protected assets.
+- The caption states `SYNTHETIC SCENARIO · METRE SCALE · NOT GIS DATA · VERTICAL SCALE 3×`.
+- Orbit, pan, zoom, Perspective, Top-down, and Reset keep the scene recoverable.
 - SwarmShield is selected by default.
 - The mission-effect value matches `demo_output/metrics.json`.
 
@@ -36,6 +38,10 @@ Expected:
 - Intercepted threats and spent interceptors disappear from the active display.
 
 Move the time slider backward and forward. The view must update immediately without restarting the server.
+
+Toggle **Trails**, **Assignments**, and **Peer links**. Trails remain bounded to
+the recent path, assignment lines show only current backend assignments, and
+peer links appear only during simulated peer-to-peer coordination.
 
 ## 3. Test baseline comparison
 
@@ -109,3 +115,11 @@ Expected:
 - Explain why equal raw leakage can still mean dramatically different defensive outcomes.
 - Point to the visible unallocated decisions and the auditable risk components.
 - Describe the allocator as a recommendation/coordination layer, not an autonomous lethal system.
+
+## 9. 3D browser and performance checks
+
+- Resize the browser through wide desktop, the 1000 px breakpoint, and a narrow mobile layout. The WebGL canvas, labels, camera aspect, controls, panels, and timeline must remain usable.
+- Switch repeatedly between baseline and SwarmShield while paused and playing. No stale meshes, trails, assignment lines, peer links, or event markers may remain.
+- Hover moving entities. The compact detail panel must use payload fields only; moving entities must not have permanent DOM labels.
+- Generate 200 threats, 120 interceptors, and a 30-second duration. Playback, scrubbing, camera controls, and strategy switching must remain responsive.
+- Inspect the browser console and network panel. There must be no JavaScript errors and no runtime CDN/network dependency; Three.js files load from `/vendor/`.

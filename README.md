@@ -7,7 +7,7 @@ The prototype treats **no interceptor allocated** as an explicit decision, minim
 ## What is included
 
 - A dependency-free Python simulation and rectangular assignment solver.
-- A polished browser dashboard with a time scrubber, audit trail, event playback, and baseline toggle.
+- A polished browser dashboard with an interactive 3D tactical viewer, time scrubber, audit trail, event playback, and baseline toggle.
 - A reproducible default 20-threat / 12-interceptor scenario at metre scale.
 - A generator for 1-200 threats, 0-120 interceptors, seeds, durations, and dynamic events.
 - A custom JSON editor for assets, starting positions, velocities, confidence, interceptor capabilities, and events.
@@ -23,6 +23,17 @@ python -m swarmshield.webapp
 ```
 
 Open `http://127.0.0.1:8765`. The app uses only Python's standard library.
+
+The operational view uses locally vendored Three.js r186 and requires no
+Internet connection or JavaScript build step. Drag to orbit, right-drag to
+pan, and scroll to zoom. **Perspective**, **Top-down**, and **Reset** provide
+safe camera presets; trails, current assignments, and simulated peer links can
+be toggled independently.
+
+Simulation `(x, y, z)` is rendered as Three.js `(X, Y, Z) = (x, z × 3, y)`.
+The 3× vertical exaggeration is visual only. Entity states, assignments,
+events, outcomes, and metrics always come from discrete Python trajectory
+snapshots. The scene is synthetic metre-scale data, not GIS data.
 
 Use **Generate scenario** to vary counts, seed, duration, or dynamic events. Open **Advanced: edit a complete scenario** to edit the full scenario as JSON. The editor starts with a valid template; click **Run custom scenario** to simulate it. Invalid references or out-of-range values produce a validation error in the header.
 

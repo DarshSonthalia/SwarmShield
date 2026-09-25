@@ -37,9 +37,22 @@
           <div class="custom-actions"><button class="secondary" id="loadTemplate" type="button">Reset to current scenario</button><button class="secondary" id="runCustom" type="button">Run custom scenario</button></div>
         </details>
         <div class="canvas-wrap">
-          <canvas id="tacticalMap" width="1200" height="720" aria-label="Tactical engagement map"></canvas>
+          <div class="tactical-scene" id="tacticalScene" aria-label="Interactive 3D tactical engagement scene"></div>
+          <div class="scene-controls" aria-label="3D camera controls">
+            <button type="button" data-camera="perspective">Perspective</button>
+            <button type="button" data-camera="top">Top-down</button>
+            <button type="button" data-camera="reset">Reset</button>
+          </div>
+          <div class="scene-toggles" aria-label="3D layer controls">
+            <label><input id="showTrails" type="checkbox" checked> Trails</label>
+            <label><input id="showAssignments" type="checkbox" checked> Assignments</label>
+            <label><input id="showPeerLinks" type="checkbox"> Peer links</label>
+          </div>
+          <div class="scene-status" id="sceneStatus" hidden></div>
+          <div class="entity-details" id="entityDetails" hidden></div>
           <div class="legend"><span><i class="dot threat"></i>Threat</span><span><i class="dot interceptor"></i>Interceptor</span><span><i class="dot unallocated"></i>Explicit leakage</span></div>
           <div class="event-banner" id="eventBanner">SCENARIO GENERATED</div>
+          <div class="scene-caption">SYNTHETIC SCENARIO · METRE SCALE · NOT GIS DATA · VERTICAL SCALE 3×</div>
         </div>
         <div class="playback">
           <button id="playButton" class="primary">▶ Run engagement</button>
@@ -77,6 +90,7 @@
       <div class="comparison-table" id="comparisonTable"></div>
     </section>
   </main>
-  <script src="/app.js"></script>
+  <script type="importmap">{"imports":{"three":"/vendor/three.module.js"}}</script>
+  <script type="module" src="/app.js"></script>
 </body>
 </html>
