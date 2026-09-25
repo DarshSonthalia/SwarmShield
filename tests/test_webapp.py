@@ -88,6 +88,14 @@ class WebAppTests(unittest.TestCase):
         self.assertEqual(set(payload["runs"]), {"baseline", "swarmshield"})
         self.assertNotIn("known_destination", json.dumps(payload))
 
+    def test_default_payload_contains_t05_uncertainty_narrative(self):
+        payload = generate_payload()
+        events = [event["type"] for event in payload["runs"]["swarmshield"]["events"]
+                  if event.get("threat_id") == "T05"]
+        self.assertIn("hold", events)
+        self.assertIn("commit", events)
+        self.assertIn("failure_recovery", events)
+
 
 if __name__ == "__main__":
     unittest.main()

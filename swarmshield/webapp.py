@@ -7,7 +7,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from .scenario import build_scenario, scenario_from_dict
+from .scenario import build_hackathon_scenario, build_scenario, scenario_from_dict
 from .simulator import run_comparison
 
 
@@ -22,8 +22,10 @@ def generate_payload(
     duration_s: int = 190,
     enable_events: bool = True,
 ) -> dict:
-    return run_comparison(
-        build_scenario(
+    scenario = (
+        build_hackathon_scenario(seed)
+        if (threat_count, interceptor_count, duration_s, enable_events) == (20, 12, 190, True)
+        else build_scenario(
             threat_count=threat_count,
             interceptor_count=interceptor_count,
             seed=seed,
@@ -31,6 +33,7 @@ def generate_payload(
             enable_events=enable_events,
         )
     )
+    return run_comparison(scenario)
 
 
 def _bounded_int(query: dict[str, list[str]], name: str, default: int, minimum: int, maximum: int) -> int:
