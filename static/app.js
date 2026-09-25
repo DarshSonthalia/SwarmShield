@@ -159,7 +159,7 @@ function updateNetwork(run) {
   document.querySelector('#networkDetail').textContent = ground
     ? 'Ground coordination available in the model. No physical link is connected.'
     : strategy === 'swarmshield'
-      ? `Local visibility only. ${conflictsSoFar} conflicting claims observed so far; no packet transport is modeled.`
+      ? `Local visibility only. ${conflictsSoFar} conflict snapshots so far; no packet transport is modeled.`
       : 'Static baseline keeps its initial assignments after ground-link loss.';
   const peers = document.querySelector('#networkPeers');
   peers.replaceChildren();
@@ -212,7 +212,7 @@ function renderMetrics() {
 
 function renderComparison() {
   const b = data.runs.baseline.metrics, s = data.runs.swarmshield.metrics;
-  const rows = [['METRIC','NAIVE','SWARMSHIELD'],['Total leakage',b.leakage,s.leakage],['Critical leaks',b.critical_leaks,s.critical_leaks],['Expected consequence',b.expected_consequence_leaked,s.expected_consequence_leaked],['Defensive cost',b.defensive_cost,s.defensive_cost],['Retasks',b.reassignments,s.reassignments],['Peer claim conflicts',b.peer_conflict_snapshots,s.peer_conflict_snapshots]];
+  const rows = [['METRIC','NAIVE','SWARMSHIELD'],['Total leakage',b.leakage,s.leakage],['Critical leaks',b.critical_leaks,s.critical_leaks],['Expected consequence',b.expected_consequence_leaked,s.expected_consequence_leaked],['Defensive cost',b.defensive_cost,s.defensive_cost],['Retasks',b.reassignments,s.reassignments],['Peer conflict snapshots',b.peer_conflict_snapshots,s.peer_conflict_snapshots]];
   const table = document.querySelector('#comparisonTable'); table.replaceChildren();
   for (const [index, row] of rows.entries()) {
     for (const cell of row) {
