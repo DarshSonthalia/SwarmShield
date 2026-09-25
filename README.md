@@ -2,7 +2,15 @@
 
 SwarmShield is a deterministic, explainable simulation of scarce interceptor allocation for SDTH 2026 Track 3, Layer 3. The app accepts generated raids with different force sizes and a complete editable JSON scenario.
 
-The prototype treats **no interceptor allocated** as an explicit decision, minimizes the expected consequence of unavoidable leakage, retasks before commitment, recovers an orphaned target after a round fails, continues through a simulated ground-link loss using peer components, and compares itself against a static nearest-feasible-target baseline.
+The prototype treats **no interceptor allocated** as an explicit decision, estimates destination beliefs from observed geometry, minimizes the expected consequence of unavoidable leakage, retasks before commitment, recovers an orphaned target after a round fails, continues through a simulated ground-link loss using peer components, and compares itself against a static nearest-feasible-target baseline.
+
+## Uncertainty-aware decision model
+
+The submission compares exactly two strategies: a naive nearest-feasible baseline and uncertainty-aware SwarmShield. Both receive the same observed positions, velocities, track history, belief update cadence, and conservative feasible horizon. `Threat.asset_id` is reserved for trajectory physics, scripted diversion, terminal leakage, and post-decision evaluation; it is not available to prediction, risk, prioritization, feasibility, or allocation.
+
+Destination probabilities are deterministic geometric estimates based on smoothed heading alignment and projected miss distance. SwarmShield uses `hostile probability × expected consequence × probability-weighted urgency` as risk. Normalized entropy remains a separate uncertainty measure and contributes only a bounded commitment friction that fades as urgency rises. Prediction accuracy, entropy, and multiclass Brier score are evaluated against ground truth at each threat's first commitment.
+
+The previous SwarmShield version used the known scenario destination directly during allocation. That known-destination behavior is not a selectable strategy in this build. A useful future three-way ablation would compare naive nearest-feasible, known-destination SwarmShield, and uncertainty-aware SwarmShield.
 
 ## What is included
 

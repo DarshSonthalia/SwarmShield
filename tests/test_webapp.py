@@ -1,3 +1,4 @@
+import json
 import unittest
 from http.server import ThreadingHTTPServer
 from threading import Thread
@@ -73,6 +74,19 @@ class WebAppTests(unittest.TestCase):
             server.shutdown()
             server.server_close()
             thread.join(timeout=2)
+
+    def test_operational_ui_uses_belief_fields_without_truth(self):
+        renderer = (STATIC_ROOT / "tactical3d.js").read_text(encoding="utf-8")
+        app = (STATIC_ROOT / "app.js").read_text(encoding="utf-8")
+        self.assertIn("top_destination_id", renderer)
+        self.assertIn("uncertainty_label", renderer)
+        self.assertNotIn("row.asset_id", renderer)
+        self.assertIn("prediction_evaluation", app)
+
+    def test_payload_keeps_two_strategy_submission(self):
+        payload = generate_payload()
+        self.assertEqual(set(payload["runs"]), {"baseline", "swarmshield"})
+        self.assertNotIn("known_destination", json.dumps(payload))
 
 
 if __name__ == "__main__":

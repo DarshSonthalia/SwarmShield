@@ -2,6 +2,15 @@
 
 Use this checklist before judging or recording. Expected outcomes are explicit so a second teammate can verify the build without reading the code.
 
+## Uncertainty-aware acceptance checks
+
+- Confirm only **Naive baseline** and **SwarmShield** are selectable.
+- Hover T05 at T+0: the detail card shows likely destination, probability, uncertainty, urgency, risk, HOLD, and no true destination.
+- At T+32, confirm T05 changes course and the backend event/tooltip moves to COMMIT.
+- At T+33, confirm I09 fails and T05 is recovered/retasked to I11.
+- Confirm aggregate first-commit accuracy, entropy, and Brier evidence appears in Decision Audit.
+- Repeat generated and custom JSON runs and confirm beliefs remain deterministic.
+
 ## 1. Start the dashboard
 
 From the project folder, run:

@@ -460,8 +460,13 @@ export function initTactical3D(container, options = {}) {
     const hit = raycaster.intersectObjects(meshes, false)[0];
     if (!hit) { details.hidden = true; return; }
     const row = hit.object.userData.record;
+    const belief = row.belief || {};
     const fields = row.kind === 'threat'
-      ? [['Track', row.id], ['State', row.state], ['Risk', row.risk], ['Asset', row.asset_id], ['Assigned', row.assignment || 'Unallocated']]
+      ? [['Track', row.id], ['State', row.state], ['Decision', row.decision || 'HOLD'],
+        ['Likely destination', `${belief.top_destination_id || 'UNKNOWN'} ${Math.round((belief.top_probability || 0) * 100)}%`],
+        ['Uncertainty', `${belief.uncertainty_label || 'unknown'} ${Math.round((belief.uncertainty || 0) * 100)}%`],
+        ['Urgency', belief.urgency ?? '--'], ['Risk', belief.risk ?? row.risk],
+        ['Assigned', row.assignment || 'Unallocated']]
       : [['Interceptor', row.id], ['State', row.state], ['Class', row.class], ['Assignment', row.assignment || 'None'], ['Committed', row.committed ? 'Yes' : 'No']];
     details.innerHTML = fields.map(([key, value]) => `<span>${escapeHtml(key)}</span><strong>${escapeHtml(value)}</strong>`).join('');
     details.style.left = `${event.clientX - rect.left + 14}px`;

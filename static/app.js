@@ -39,7 +39,7 @@ function allocationAt(run, discreteTime) {
 
 function updateEvent(run, discreteTime) {
   const banner = document.querySelector('#eventBanner');
-  const visibleTypes = new Set(['threat_diversion', 'interceptor_failure', 'failure_recovery', 'ground_link_loss', 'reassignment', 'collision_avoidance', 'intercept', 'leak']);
+  const visibleTypes = new Set(['hold', 'commit', 'retask', 'threat_diversion', 'interceptor_failure', 'failure_recovery', 'ground_link_loss', 'reassignment', 'collision_avoidance', 'intercept', 'leak']);
   const event = run.events.find(item => item.time_s === discreteTime && visibleTypes.has(item.type));
   if (event) { banner.textContent = event.label.toUpperCase(); banner.classList.add('show'); }
   else banner.classList.remove('show');
@@ -61,6 +61,7 @@ function updateNetwork(discreteTime) {
 
 function renderMetrics() {
   const metrics = data.runs[strategy].metrics;
+  const prediction_evaluation = metrics.prediction_evaluation;
   const change = data.headline.expected_consequence_reduction_percent;
   document.querySelector('#reductionMetric').textContent = strategy === 'swarmshield' ? fmt(Math.abs(change)) : '0';
   document.querySelector('#reductionLabel').textContent = strategy === 'baseline' ? 'baseline reference' : change > 0 ? 'lower expected consequence of leakage' : change < 0 ? 'higher expected consequence of leakage' : 'same expected consequence of leakage';
@@ -69,7 +70,10 @@ function renderMetrics() {
   document.querySelector('#costMetric').textContent = fmt(metrics.defensive_cost);
   document.querySelector('#reassignMetric').textContent = metrics.reassignments;
   const decisions = [...data.runs[strategy].decisions].sort((left, right) => right.risk - left.risk).slice(0, 9);
-  document.querySelector('#decisionList').innerHTML = decisions.map(decision => `<div class="decision"><strong>${decision.threat_id}</strong><div><small>RISK ${fmt(decision.risk)}</small><div class="bar"><i style="width:${Math.min(100, decision.risk)}%"></i></div></div><em>${decision.initial_decision === 'intercept' ? decision.interceptor_id : 'UNALLOCATED'}</em></div>`).join('');
+  const evaluation = prediction_evaluation.committed_count
+    ? `<div class="belief-summary">FIRST-COMMIT PREDICTION · ${fmt(prediction_evaluation.top_destination_accuracy * 100)}% ACC · BRIER ${fmt(prediction_evaluation.brier_score)} · ENTROPY ${fmt(prediction_evaluation.mean_normalized_entropy)}</div>`
+    : '<div class="belief-summary">NO COMMITMENT PREDICTIONS</div>';
+  document.querySelector('#decisionList').innerHTML = evaluation + decisions.map(decision => `<div class="decision"><strong>${decision.threat_id}</strong><div><small>RISK ${fmt(decision.risk)} · LIKELY ${decision.likely_destination_id}</small><div class="bar"><i style="width:${Math.min(100, decision.risk)}%"></i></div></div><em>${decision.initial_decision === 'intercept' ? decision.interceptor_id : 'HOLD'}</em></div>`).join('');
 }
 
 function renderComparison() {
