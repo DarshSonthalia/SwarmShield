@@ -1,0 +1,795 @@
+{
+  "runs": [
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 5,
+        "cumulative_exposure": 819.4213269664043,
+        "exposure": 7.060989506722984,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 0,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 9,
+        "cumulative_exposure": 548.4980689418987,
+        "exposure": 4.525647315840968,
+        "low_consequence_commitments": 0,
+        "reassignments": 1,
+        "stability": 0.9230769230769231,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 11,
+        "critical_tracks_covered": 4,
+        "cumulative_exposure": 817.5235351792585,
+        "exposure": 7.058079147484865,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 1,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 11,
+        "critical_tracks_covered": 9,
+        "cumulative_exposure": 555.972528268619,
+        "exposure": 4.329015514632857,
+        "low_consequence_commitments": 0,
+        "reassignments": 1,
+        "stability": 0.9230769230769231,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 14,
+        "critical_tracks_covered": 7,
+        "cumulative_exposure": 814.7332731450841,
+        "exposure": 7.0428340444965,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 2,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 14,
+        "critical_tracks_covered": 10,
+        "cumulative_exposure": 548.5064777753438,
+        "exposure": 4.526889083210584,
+        "low_consequence_commitments": 0,
+        "reassignments": 1,
+        "stability": 0.9230769230769231,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 14,
+        "critical_tracks_covered": 7,
+        "cumulative_exposure": 814.050192512248,
+        "exposure": 6.975485205878353,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 3,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 14,
+        "critical_tracks_covered": 10,
+        "cumulative_exposure": 548.9701403820836,
+        "exposure": 4.55170924230858,
+        "low_consequence_commitments": 0,
+        "reassignments": 2,
+        "stability": 0.8571428571428572,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 5,
+        "cumulative_exposure": 817.6112434217725,
+        "exposure": 6.995233826725369,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 4,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 10,
+        "cumulative_exposure": 539.4333424523801,
+        "exposure": 4.167668869036263,
+        "low_consequence_commitments": 0,
+        "reassignments": 2,
+        "stability": 0.8571428571428572,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 13,
+        "critical_tracks_covered": 6,
+        "cumulative_exposure": 813.6638050488798,
+        "exposure": 6.985855028476998,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 5,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 13,
+        "critical_tracks_covered": 10,
+        "cumulative_exposure": 538.4235010471817,
+        "exposure": 4.547312908796056,
+        "low_consequence_commitments": 0,
+        "reassignments": 1,
+        "stability": 0.9230769230769231,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 5,
+        "cumulative_exposure": 817.1278457365638,
+        "exposure": 7.05127239089137,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 6,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 9,
+        "cumulative_exposure": 544.0839191984618,
+        "exposure": 4.408383570100803,
+        "low_consequence_commitments": 0,
+        "reassignments": 1,
+        "stability": 0.9230769230769231,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 13,
+        "critical_tracks_covered": 6,
+        "cumulative_exposure": 816.147384473589,
+        "exposure": 7.045742695007397,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 7,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 13,
+        "critical_tracks_covered": 10,
+        "cumulative_exposure": 539.217009608068,
+        "exposure": 4.324782920169341,
+        "low_consequence_commitments": 0,
+        "reassignments": 2,
+        "stability": 0.8571428571428572,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 14,
+        "critical_tracks_covered": 7,
+        "cumulative_exposure": 816.6722529763072,
+        "exposure": 6.973493206649663,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 8,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 14,
+        "critical_tracks_covered": 11,
+        "cumulative_exposure": 544.1769943105368,
+        "exposure": 4.431995059466796,
+        "low_consequence_commitments": 0,
+        "reassignments": 1,
+        "stability": 0.9230769230769231,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 5,
+        "cumulative_exposure": 812.8007245017544,
+        "exposure": 7.00162609373605,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 9,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 9,
+        "cumulative_exposure": 551.5029237446532,
+        "exposure": 4.344380253711178,
+        "low_consequence_commitments": 0,
+        "reassignments": 1,
+        "stability": 0.9230769230769231,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 13,
+        "critical_tracks_covered": 6,
+        "cumulative_exposure": 816.460593455992,
+        "exposure": 6.978033056919379,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 10,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 13,
+        "critical_tracks_covered": 10,
+        "cumulative_exposure": 557.422783438242,
+        "exposure": 4.457098974300543,
+        "low_consequence_commitments": 0,
+        "reassignments": 1,
+        "stability": 0.9230769230769231,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 5,
+        "cumulative_exposure": 818.2611866729467,
+        "exposure": 7.054614071517744,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 11,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 10,
+        "cumulative_exposure": 552.1490875004041,
+        "exposure": 4.3484338278762324,
+        "low_consequence_commitments": 0,
+        "reassignments": 2,
+        "stability": 0.8571428571428572,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 14,
+        "critical_tracks_covered": 7,
+        "cumulative_exposure": 813.6546561508247,
+        "exposure": 7.033360507489231,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 12,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 14,
+        "critical_tracks_covered": 10,
+        "cumulative_exposure": 545.5980677559089,
+        "exposure": 4.597863626712269,
+        "low_consequence_commitments": 0,
+        "reassignments": 1,
+        "stability": 0.9230769230769231,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 5,
+        "cumulative_exposure": 818.1268740445759,
+        "exposure": 7.071903286398143,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 13,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 9,
+        "cumulative_exposure": 553.6523792117998,
+        "exposure": 4.46590372340523,
+        "low_consequence_commitments": 0,
+        "reassignments": 1,
+        "stability": 0.9230769230769231,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 11,
+        "critical_tracks_covered": 4,
+        "cumulative_exposure": 817.9866488726062,
+        "exposure": 7.065535290740086,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 14,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 11,
+        "critical_tracks_covered": 9,
+        "cumulative_exposure": 542.2989230275294,
+        "exposure": 4.273623728763629,
+        "low_consequence_commitments": 0,
+        "reassignments": 1,
+        "stability": 0.9230769230769231,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 5,
+        "cumulative_exposure": 817.0892785621743,
+        "exposure": 7.045665040008455,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 15,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 9,
+        "cumulative_exposure": 557.5023887617914,
+        "exposure": 4.365809234167673,
+        "low_consequence_commitments": 0,
+        "reassignments": 1,
+        "stability": 0.9230769230769231,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 11,
+        "critical_tracks_covered": 4,
+        "cumulative_exposure": 818.850188325099,
+        "exposure": 7.067502962646772,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 16,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 11,
+        "critical_tracks_covered": 10,
+        "cumulative_exposure": 550.4649393857505,
+        "exposure": 3.905772739485972,
+        "low_consequence_commitments": 0,
+        "reassignments": 2,
+        "stability": 0.8571428571428572,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 5,
+        "cumulative_exposure": 817.8816527009798,
+        "exposure": 7.051788407078855,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 17,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 9,
+        "cumulative_exposure": 551.2981386977123,
+        "exposure": 4.486941602188053,
+        "low_consequence_commitments": 0,
+        "reassignments": 1,
+        "stability": 0.9230769230769231,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 13,
+        "critical_tracks_covered": 6,
+        "cumulative_exposure": 814.3772121478444,
+        "exposure": 6.992707845777688,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 18,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 13,
+        "critical_tracks_covered": 10,
+        "cumulative_exposure": 541.5938213368476,
+        "exposure": 4.54184285477789,
+        "low_consequence_commitments": 0,
+        "reassignments": 1,
+        "stability": 0.9230769230769231,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 5,
+        "cumulative_exposure": 813.4600030264647,
+        "exposure": 7.027772219648334,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 19,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 10,
+        "cumulative_exposure": 546.2077735458107,
+        "exposure": 4.2033459683803915,
+        "low_consequence_commitments": 0,
+        "reassignments": 2,
+        "stability": 0.8571428571428572,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 11,
+        "critical_tracks_covered": 4,
+        "cumulative_exposure": 818.3158117054561,
+        "exposure": 7.05027273419263,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 20,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 11,
+        "critical_tracks_covered": 9,
+        "cumulative_exposure": 540.4558595859912,
+        "exposure": 4.222138425571975,
+        "low_consequence_commitments": 0,
+        "reassignments": 1,
+        "stability": 0.9230769230769231,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 11,
+        "critical_tracks_covered": 4,
+        "cumulative_exposure": 816.5875598317874,
+        "exposure": 7.049712992646073,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 21,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 11,
+        "critical_tracks_covered": 8,
+        "cumulative_exposure": 536.7671207230617,
+        "exposure": 4.50568090119666,
+        "low_consequence_commitments": 0,
+        "reassignments": 1,
+        "stability": 0.9230769230769231,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 13,
+        "critical_tracks_covered": 6,
+        "cumulative_exposure": 816.5695454126362,
+        "exposure": 7.05707568391132,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 22,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 13,
+        "critical_tracks_covered": 10,
+        "cumulative_exposure": 549.7038590822895,
+        "exposure": 4.513223569008091,
+        "low_consequence_commitments": 0,
+        "reassignments": 1,
+        "stability": 0.9230769230769231,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 2,
+        "critical_tracks": 14,
+        "critical_tracks_covered": 7,
+        "cumulative_exposure": 819.3218091260683,
+        "exposure": 7.053502088925133,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 23,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 14,
+        "critical_tracks_covered": 10,
+        "cumulative_exposure": 536.7949102809489,
+        "exposure": 4.653412107386515,
+        "low_consequence_commitments": 0,
+        "reassignments": 1,
+        "stability": 0.9230769230769231,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 5,
+        "cumulative_exposure": 814.6285156476874,
+        "exposure": 7.0495668427782014,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 24,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 9,
+        "cumulative_exposure": 533.8436990477838,
+        "exposure": 4.572742077924504,
+        "low_consequence_commitments": 0,
+        "reassignments": 1,
+        "stability": 0.9230769230769231,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 5,
+        "cumulative_exposure": 815.5002348570482,
+        "exposure": 7.007105182041649,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 25,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 10,
+        "cumulative_exposure": 545.4892822533711,
+        "exposure": 4.44057103718351,
+        "low_consequence_commitments": 0,
+        "reassignments": 1,
+        "stability": 0.9230769230769231,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 14,
+        "critical_tracks_covered": 7,
+        "cumulative_exposure": 813.9089793600218,
+        "exposure": 7.070602958793981,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 26,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 14,
+        "critical_tracks_covered": 12,
+        "cumulative_exposure": 546.9591265690862,
+        "exposure": 4.303217400124118,
+        "low_consequence_commitments": 0,
+        "reassignments": 2,
+        "stability": 0.8571428571428572,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 5,
+        "cumulative_exposure": 813.9106174755757,
+        "exposure": 7.0186359983115745,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 27,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 10,
+        "cumulative_exposure": 537.2723388632407,
+        "exposure": 4.205108609485562,
+        "low_consequence_commitments": 0,
+        "reassignments": 2,
+        "stability": 0.8571428571428572,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 5,
+        "cumulative_exposure": 815.4083286610391,
+        "exposure": 7.06269732323479,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 28,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 12,
+        "critical_tracks_covered": 10,
+        "cumulative_exposure": 550.4717594063598,
+        "exposure": 4.249713749484538,
+        "low_consequence_commitments": 0,
+        "reassignments": 2,
+        "stability": 0.8571428571428572,
+        "utilization": 1.0
+      }
+    },
+    {
+      "baseline": {
+        "critical_assets_covered": 1,
+        "critical_tracks": 13,
+        "critical_tracks_covered": 6,
+        "cumulative_exposure": 812.6538553805636,
+        "exposure": 6.990498689534496,
+        "low_consequence_commitments": 2,
+        "reassignments": 0,
+        "stability": 1.0,
+        "utilization": 1.0
+      },
+      "seed": 29,
+      "swarmshield": {
+        "critical_assets_covered": 4,
+        "critical_tracks": 13,
+        "critical_tracks_covered": 9,
+        "cumulative_exposure": 554.2492587916034,
+        "exposure": 4.56877554476466,
+        "low_consequence_commitments": 0,
+        "reassignments": 1,
+        "stability": 0.9230769230769231,
+        "utilization": 1.0
+      }
+    }
+  ],
+  "seed_count": 30,
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29
+  ],
+  "summary": {
+    "baseline_mean_critical_coverage": 0.433469,
+    "baseline_mean_cumulative_exposure": 816.090171,
+    "mean_exposure_reduction_percent": 33.058677,
+    "runs_swarmshield_lower_exposure": 30,
+    "swarmshield_mean_critical_coverage": 0.779312,
+    "swarmshield_mean_cumulative_exposure": 546.299347
+  }
+}

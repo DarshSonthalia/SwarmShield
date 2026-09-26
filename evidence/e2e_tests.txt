@@ -1,0 +1,16 @@
+
+> swarmshield@1.0.0 test:e2e
+> npm --prefix frontend run test:e2e
+
+
+> swarmshield-dashboard@1.0.0 test:e2e
+> playwright test
+
+
+Running 3 tests using 1 worker
+
+  âœ“  1 e2e\dashboard.spec.ts:6:1 â€º real engine, map, assignment boundaries, inspectors, audit, and baseline (11.1s)
+  âœ“  2 e2e\dashboard.spec.ts:28:1 â€º playback, orbit, filters, layers, demo and responsive layout (11.7s)
+  âœ“  3 e2e\dashboard.spec.ts:39:1 â€º connection failure shows a recoverable error instead of a blank screen (694ms)
+
+  3 passed (24.7s)

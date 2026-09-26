@@ -12,13 +12,12 @@ SwarmShield shows how a decision layer can spread **12 simulated resources** acr
 
 The focus is the allocation decision under uncertainty, not physical guidance. Every number, assignment line, audit entry and metric in the dashboard comes from the running deterministic simulation.
 
-![Dashboard](artifacts/dashboard-desktop.png)
-
 ---
 
 ## Quick start
 
-Requirements: **Python 3.10+** and **Node.js 22.12+**.
+Requirements: **Python 3.10-3.13** and **Node.js 22.12+**.  
+Tested with Python 3.13 and Node.js 22.12+.
 
 ```bash
 npm run setup     # creates backend/.venv, installs Python + frontend dependencies
@@ -56,6 +55,8 @@ npm run dev                        # http://127.0.0.1:5173
 | `npm run build` | Type-check and build the dashboard into `frontend/dist` |
 | `npm start` | Backend only. After `npm run build`, it also serves the dashboard at http://127.0.0.1:8000 |
 | `npm run package` | Zip the project to `artifacts/SwarmShield.zip` |
+| `backend/.venv/Scripts/python scripts/stress_eval.py --seeds 30 --output evidence/stress_test_30_seeds.json` | Multi-seed observation-noise evaluation (Windows) |
+| `backend/.venv/Scripts/python scripts/collect_evidence.py` | Collect backend, frontend, E2E, metric, and stress evidence (Windows) |
 
 ---
 
@@ -80,7 +81,7 @@ Moments worth showing:
 | T+52 | After 4 qualifying cycles, **T11's resource is released** (open-water probability 97%) |
 | T+66 – T+84 | T17 turns toward the airport. Its priority rises and at T+84 a resource is **reallocated** from a weaker track |
 | T+76 | T18 and T19 escalate toward power and civic infrastructure |
-| T+120 | Compare with first-come-first-served: 11/13 vs 6/13 critical tracks covered |
+| T+110 – T+120 | Compare live backend metrics against the static first-come / one-resource-per-track baseline |
 
 The ambiguous track T14 circles with high noise and stays monitored without a commitment.
 

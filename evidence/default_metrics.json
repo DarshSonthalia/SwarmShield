@@ -1,0 +1,35 @@
+{
+  "active_tracks": 20,
+  "assignment_changes": 16,
+  "baseline": {
+    "critical_assets_covered": 1,
+    "critical_tracks": 13,
+    "critical_tracks_covered": 6,
+    "cumulative_exposure": 814.2004247613161,
+    "exposure": 7.014703848980993,
+    "low_consequence_commitments": 2,
+    "reassignments": 0,
+    "stability": 1.0,
+    "utilization": 1.0
+  },
+  "critical_assets_covered": 4,
+  "high_consequence_tracks": 13,
+  "low_consequence_tracks": 2,
+  "mean_confidence": 0.5580011474496113,
+  "mean_uncertainty": 0.5711696428333908,
+  "released_resources": 1,
+  "resources_available": 0,
+  "resources_committed": 12,
+  "swarm": {
+    "critical_assets_covered": 4,
+    "critical_tracks": 13,
+    "critical_tracks_covered": 11,
+    "cumulative_exposure": 553.1084453621482,
+    "exposure": 4.394361781522469,
+    "low_consequence_commitments": 0,
+    "reassignments": 1,
+    "stability": 0.9230769230769231,
+    "utilization": 1.0
+  },
+  "total_tracks": 20
+}

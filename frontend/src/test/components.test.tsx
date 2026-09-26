@@ -6,9 +6,47 @@ import { ProbabilityBars,Inspector } from '../components/Inspector'
 import { TrackList } from '../components/TrackList'
 import { Timeline } from '../components/Timeline'
 import { AuditDrawer } from '../components/Audit'
+import { DemoPresentation, demoStage } from '../components/DemoPresentation'
+import { ModelBoundary } from '../components/ModelBoundary'
+import { resourcePresentationPath } from '../components/CityScene'
 
 const frames=fixture.frames.map(f=>frameSchema.parse(f)),scenario=scenarioSchema.parse(fixture.scenario),audit=fixture.audit.map(a=>auditSchema.parse(a))
 describe('simulation components',()=>{
+  it('derives guided demo stages from real release and reallocation audit entries',()=>{
+    expect(demoStage(0,audit)).toBe('opening')
+    expect(demoStage(46,audit)).toBe('release')
+    expect(demoStage(84,audit)).toBe('reallocate')
+    expect(demoStage(110,audit)).toBe('comparison')
+  })
+  it('renders release evidence from the current frame and configured gates',()=>{
+    const f=frames.find(f=>f.time===52)!;render(<DemoPresentation frame={f} scenario={scenario} audit={audit}/>);
+    expect(screen.getByRole('heading',{name:'T11'})).toBeInTheDocument()
+    const guidance=screen.getByLabelText('Demo guidance')
+    expect(guidance).toHaveTextContent('4 / 4')
+    expect(guidance).toHaveTextContent('RELEASE I04')
+    expect(guidance).toHaveTextContent(`${(f.tracks[10].probabilities.A08*100).toFixed(1)}%`)
+  })
+  it('keeps demo guidance in a compact strip with real release data',()=>{
+    const f=frames.find(f=>f.time===52)!;render(<DemoPresentation frame={f} scenario={scenario} audit={audit}/>);
+    expect(screen.getByLabelText('Demo guidance')).toHaveClass('demo-guidance-strip')
+    expect(screen.getByText('T11 — RELEASE')).toBeInTheDocument()
+    expect(screen.getByText(/4 \/ 4/)).toBeInTheDocument()
+  })
+  it('builds deterministic shallow resource paths without periodic motion',()=>{
+    const start:[number,number,number]=[0,1,0],end:[number,number,number]=[20,5,10]
+    expect(resourcePresentationPath('I04',start,end,0)).toEqual(start)
+    expect(resourcePresentationPath('I04',start,end,1)).toEqual(end)
+    expect(resourcePresentationPath('I04',start,end,.5)).toEqual(resourcePresentationPath('I04',start,end,.5))
+    expect(resourcePresentationPath('I04',start,end,.5)).not.toEqual(resourcePresentationPath('I05',start,end,.5))
+    const midpoint=resourcePresentationPath('I04',start,end,.5)
+    expect(Math.abs(midpoint[1]-(start[1]+end[1])/2)).toBeLessThanOrEqual(1)
+  })
+  it('states the model boundary without claiming networking or collision avoidance',()=>{
+    render(<ModelBoundary onClose={()=>{}}/>);expect(screen.getByRole('heading',{name:'Model boundary'})).toBeInTheDocument()
+    expect(screen.getByText('Real peer-to-peer drone networking')).toBeInTheDocument()
+    expect(screen.getByText('Real collision avoidance')).toBeInTheDocument()
+    expect(screen.getByText('Release hysteresis')).toBeInTheDocument()
+  })
   it('renders every probability, including near-zero classes',()=>{
     const track=frames[3].tracks[10];render(<ProbabilityBars track={track} scenario={scenario}/>);
     for(const d of scenario.config.destinations)expect(screen.getByText(d.short_name)).toBeInTheDocument()
