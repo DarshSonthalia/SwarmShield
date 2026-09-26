@@ -1,0 +1,13 @@
+import { ArrowDownWideNarrow, Radar, Search, Crosshair } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import type { Frame, Scenario, Selection } from '../types'
+import { filters,filterTracks,leading,pct,trackColor,type Filter } from '../state'
+export function TrackList({frame,scenario,selection,onSelect}:{frame:Frame;scenario:Scenario;selection:Selection;onSelect:(s:Selection)=>void}){
+  const [filter,setFilter]=useState<Filter>('all'),[query,setQuery]=useState(''),[sort,setSort]=useState(false)
+  const tracks=useMemo(()=>{
+    const result=filterTracks(frame.tracks,filter,frame.time).filter(t=>t.id.toLowerCase().includes(query.toLowerCase()))
+    return sort?result.sort((a,b)=>b.priority-a.priority):result
+  },[frame,filter,query,sort])
+  const dests=scenario.config.destinations
+  return <aside className="track-panel panel"><div className="panel-heading"><div><Radar size={15}/><h2>Track registry</h2></div><span className="count">{frame.tracks.length}</span></div><div className="track-tools"><label className="search"><Search size={13}/><input aria-label="Search tracks" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Find a track…"/><kbd>/</kbd></label><div className="filter-row"><select aria-label="Filter tracks" value={filter} onChange={e=>setFilter(e.target.value as Filter)}>{filters.map(f=><option key={f.id} value={f.id}>{f.label}</option>)}</select><button className={`icon-button ${sort?'active':''}`} onClick={()=>setSort(s=>!s)} aria-label="Sort by priority" aria-pressed={sort} title="Sort by priority"><ArrowDownWideNarrow size={15}/></button></div></div><div className="list-label"><span>TRACK / INTENT</span><span>PRIORITY</span></div><div className="track-rows">{tracks.map(t=><button key={t.id} className={`track-row ${selection.kind==='track'&&selection.id===t.id?'selected':''}`} onClick={()=>onSelect({kind:'track',id:t.id})} aria-label={`Inspect ${t.id}`} aria-pressed={selection.kind==='track'&&selection.id===t.id}><span className="track-indicator" style={{background:trackColor(t)}}/><span className="track-identity"><span><b>{t.id}</b><span className="track-assignment">{t.assigned_resource?<><Crosshair size={10}/>{t.assigned_resource}</>:t.state==='OBSERVE'?'OBS':'—'}</span></span><small>{dests.find(d=>d.id===leading(t))?.short_name}<span> {pct(t.probabilities[leading(t)])}</span></small></span><span className="priority-number" style={{color:trackColor(t)}}>{(t.priority*100).toFixed(0)}<i><i style={{width:`${t.priority*100}%`,background:trackColor(t)}}/></i></span></button>)}{!tracks.length&&<div className="empty-state">No tracks match this view.</div>}</div><div className="registry-footer"><span className="tiny-dot mint"/>All tracks continuously monitored</div></aside>
+}

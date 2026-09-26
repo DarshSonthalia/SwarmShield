@@ -1,0 +1,1 @@
+{"name":"swarmshield","version":"1.0.0","private":true,"scripts":{"setup":"node scripts/setup.mjs","dev":"node scripts/dev.mjs","test":"node scripts/test.mjs","build":"npm --prefix frontend run build","start":"node scripts/serve-backend.mjs","test:e2e":"npm --prefix frontend run test:e2e","package":"node scripts/package.mjs"},"engines":{"node":">=22.12.0"}}

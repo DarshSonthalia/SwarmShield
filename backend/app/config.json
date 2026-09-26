@@ -1,0 +1,34 @@
+{
+  "seed": 2407,
+  "track_count": 20,
+  "resource_count": 12,
+  "duration": 120,
+  "observation_interval": 2,
+  "allocation_interval": 2,
+  "initial_observation_period": 12,
+  "visual_launch_delay": 2,
+  "trajectory_duration": 12,
+  "priority": {"consequence": 0.70, "uncertainty": 0.07, "escalation": 0.10, "scarcity": 0.08, "switching_penalty": 0.035},
+  "uncertainty": {"initial_concentration": 2.0, "max_concentration": 38.0, "evidence_cycles": 15, "major_turn_radians": 0.25, "noise_floor": 0.012},
+  "hysteresis": {"minimum_assignment_duration": 12, "improvement_threshold": 0.07, "challenger_persistence": 3, "reassignment_cooldown": 12, "release_persistence_cycles": 4, "water_probability": 0.76, "release_consequence": 0.30, "release_confidence": 0.65, "turn_quiet_period": 10, "commit_priority": 0.22, "commit_confidence": 0.15},
+  "destinations": [
+    {"id":"A01","name":"Aster Airport","short_name":"Airport","position":[-28,0,-24],"radius":9,"weight":0.97,"category":"Aviation"},
+    {"id":"A02","name":"Meridian Central","short_name":"CBD","position":[0,0,0],"radius":9,"weight":1.0,"category":"Urban core"},
+    {"id":"A03","name":"Eastport Logistics","short_name":"Port","position":[29,0,15],"radius":8,"weight":0.58,"category":"Coastal / port"},
+    {"id":"A04","name":"Westgrid Energy","short_name":"Power","position":[-26,0,17],"radius":7,"weight":0.95,"category":"Major utility"},
+    {"id":"A05","name":"Civic Response Hub","short_name":"Emergency","position":[4,0,-22],"radius":6,"weight":0.96,"category":"Government / emergency"},
+    {"id":"A06","name":"Fernhaven District","short_name":"Residential","position":[-22,0,-3],"radius":9,"weight":0.68,"category":"Residential"},
+    {"id":"A07","name":"Northworks","short_name":"Industrial","position":[23,0,-17],"radius":8,"weight":0.53,"category":"Industrial"},
+    {"id":"A08","name":"Pelagic Expanse","short_name":"Open water","position":[52,0,38],"radius":15,"weight":0.04,"category":"Open water"}
+  ],
+  "sites": [
+    {"id":"S01","name":"Central","position":[-9,0.5,5]},
+    {"id":"S02","name":"Civic","position":[9,0.5,-12]},
+    {"id":"S03","name":"Northwest","position":[-39,0.5,-28]},
+    {"id":"S04","name":"North","position":[-10,0.5,-34]},
+    {"id":"S05","name":"Northeast","position":[31,0.5,-29]},
+    {"id":"S06","name":"Eastport","position":[36,0.5,5]},
+    {"id":"S07","name":"South","position":[3,0.5,27]},
+    {"id":"S08","name":"West","position":[-35,0.5,23]}
+  ]
+}

@@ -1,0 +1,32 @@
+diff --git a/node_modules/@react-three/drei/web/Html.js b/node_modules/@react-three/drei/web/Html.js
+index 81d68b7..11f90a0 100644
+--- a/node_modules/@react-three/drei/web/Html.js
++++ b/node_modules/@react-three/drei/web/Html.js
+@@ -140,7 +140,10 @@ const Html = /* @__PURE__ */React.forwardRef(({
+   }, [occlude]);
+   React.useLayoutEffect(() => {
+     if (group.current) {
+-      const currentRoot = root.current = ReactDOM.createRoot(el);
++      // Reuse a root whose deferred unmount has not run yet (StrictMode remount shares `el`).
++      const pending = root.current && root.current.__pendingUnmount;
++      const currentRoot = root.current = pending ? root.current : ReactDOM.createRoot(el);
++      currentRoot.__pendingUnmount = false;
+       scene.updateMatrixWorld();
+       if (transform) {
+         el.style.cssText = `position:absolute;top:0;left:0;pointer-events:none;overflow:hidden;`;
+@@ -153,7 +156,14 @@ const Html = /* @__PURE__ */React.forwardRef(({
+       }
+       return () => {
+         if (target) target.removeChild(el);
+-        currentRoot.unmount();
++        // React 19 warns when a root is unmounted synchronously during a commit; defer it.
++        currentRoot.__pendingUnmount = true;
++        queueMicrotask(() => {
++          if (!currentRoot.__pendingUnmount) return;
++          currentRoot.__pendingUnmount = false;
++          currentRoot.unmount();
++          if (root.current === currentRoot) root.current = null;
++        });
+       };
+     }
+   }, [target, transform]);
